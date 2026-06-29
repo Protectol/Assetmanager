@@ -18,7 +18,7 @@ export default async function PublicFormPage({
       employee:employees(employee_name, employee_id, department, designation, location, email),
       form_assets(
         id, asset_id, old_asset_id, condition, remarks, verified,
-        asset:assets(id, asset_name, asset_type, asset_tag, serial_number, brand, model, condition),
+        asset:assets!form_assets_asset_id_fkey(id, asset_name, asset_type, asset_tag, serial_number, brand, model, condition),
         old_asset:assets!form_assets_old_asset_id_fkey(id, asset_name, asset_tag, serial_number)
       )
     `)

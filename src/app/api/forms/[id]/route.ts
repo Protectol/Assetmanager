@@ -19,7 +19,7 @@ export async function GET(
       employee:employees(*),
       form_assets(
         *,
-        asset:assets(*),
+        asset:assets!form_assets_asset_id_fkey(*),
         old_asset:assets!form_assets_old_asset_id_fkey(*)
       ),
       submission:form_submissions(*)

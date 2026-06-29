@@ -30,7 +30,7 @@ export async function GET(
       employee:employees(id, employee_name, employee_id, department, designation, location, email),
       form_assets(
         id, asset_id, old_asset_id, condition, remarks, verified,
-        asset:assets(id, asset_name, asset_type, asset_tag, serial_number, brand, model, condition),
+        asset:assets!form_assets_asset_id_fkey(id, asset_name, asset_type, asset_tag, serial_number, brand, model, condition),
         old_asset:assets!form_assets_old_asset_id_fkey(id, asset_name, asset_tag, serial_number)
       ),
       submission:form_submissions(id, submitted_at)
@@ -75,7 +75,7 @@ export async function POST(
       employee:employees(*),
       form_assets(
         *,
-        asset:assets(*),
+        asset:assets!form_assets_asset_id_fkey(*),
         old_asset:assets!form_assets_old_asset_id_fkey(*)
       )
     `)
@@ -126,7 +126,7 @@ export async function POST(
     .from("form_assets")
     .select(`
       *,
-      asset:assets(*),
+      asset:assets!form_assets_asset_id_fkey(*),
       old_asset:assets!form_assets_old_asset_id_fkey(*)
     `)
     .eq("form_id", form.id);

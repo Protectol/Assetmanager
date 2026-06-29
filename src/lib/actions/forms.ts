@@ -52,7 +52,7 @@ export async function processOnboardingSubmission(
 ) {
   const { data: formAssets } = await supabase
     .from("form_assets")
-    .select("*, asset:assets(*)")
+    .select("*, asset:assets!form_assets_asset_id_fkey(*)")
     .eq("form_id", formId);
 
   const { data: form } = await supabase
@@ -99,7 +99,7 @@ export async function processExchangeSubmission(
 ) {
   const { data: formAssets } = await supabase
     .from("form_assets")
-    .select("*, asset:assets(*), old_asset:assets!form_assets_old_asset_id_fkey(*)")
+    .select("*, asset:assets!form_assets_asset_id_fkey(*), old_asset:assets!form_assets_old_asset_id_fkey(*)")
     .eq("form_id", formId);
 
   const { data: form } = await supabase
@@ -168,7 +168,7 @@ export async function processReturnSubmission(
 ) {
   const { data: formAssets } = await supabase
     .from("form_assets")
-    .select("*, asset:assets(*)")
+    .select("*, asset:assets!form_assets_asset_id_fkey(*)")
     .eq("form_id", formId);
 
   const { data: form } = await supabase
