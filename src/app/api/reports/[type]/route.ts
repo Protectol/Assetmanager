@@ -1,0 +1,201 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { requireApiAuth, isErrorResponse } from "@/lib/api-auth";
+import { generateReportPDF } from "@/lib/pdf";
+import { capitalize, formatDate, formatDateTime } from "@/lib/utils";
+
+const VALID_TYPES = [
+  "employee-assets",
+  "asset-history",
+  "verification",
+  "pending-forms",
+  "returns",
+] as const;
+
+type ReportType = (typeof VALID_TYPES)[number];
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ type: string }> }
+) {
+  const auth = await requireApiAuth();
+  if (isErrorResponse(auth)) return auth;
+
+  const { type } = await params;
+  if (!VALID_TYPES.includes(type as ReportType)) {
+    return NextResponse.json({ error: "Invalid report type" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "company_name")
+    .single();
+
+  const companyName = settings?.value || process.env.NEXT_PUBLIC_COMPANY_NAME;
+
+  let title = "";
+  let headers: string[] = [];
+  let rows: string[][] = [];
+
+  switch (type as ReportType) {
+    case "employee-assets": {
+      title = "Employee Asset Register";
+      headers = ["Employee", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
+      const { data } = await supabase
+        .from("asset_assignments")
+        .select(`
+          assigned_date,
+          employee:employees(employee_name, employee_id, department),
+          asset:assets(asset_name, asset_type, asset_tag, serial_number, condition, status)
+        `)
+        .eq("is_active", true)
+        .order("assigned_date", { ascending: false });
+
+      rows = (data || []).map((row) => {
+        const emp = row.employee as unknown as { employee_name: string; employee_id: string; department: string } | null;
+        const asset = row.asset as unknown as {
+          asset_name: string;
+          asset_type: string;
+          asset_tag: string;
+          serial_number?: string;
+          condition: string;
+          status: string;
+        } | null;
+        return [
+          emp?.employee_name || "—",
+          emp?.employee_id || "—",
+          emp?.department || "—",
+          asset?.asset_name || "—",
+          asset?.asset_type || "—",
+          asset?.asset_tag || "—",
+          asset?.serial_number || "—",
+          asset?.condition ? capitalize(asset.condition) : "—",
+          asset?.status ? capitalize(asset.status) : "—",
+        ];
+      });
+      break;
+    }
+
+    case "asset-history": {
+      title = "Asset History Report";
+      headers = ["Date", "Action", "Employee", "Asset", "Tag", "Remarks"];
+      const { data } = await supabase
+        .from("asset_history")
+        .select(`
+          date, action, remarks,
+          employee:employees(employee_name),
+          asset:assets(asset_name, asset_tag)
+        `)
+        .order("date", { ascending: false })
+        .limit(500);
+
+      rows = (data || []).map((row) => {
+        const emp = row.employee as unknown as { employee_name: string } | null;
+        const asset = row.asset as unknown as { asset_name: string; asset_tag: string } | null;
+        return [
+          formatDateTime(row.date),
+          capitalize(row.action),
+          emp?.employee_name || "—",
+          asset?.asset_name || "—",
+          asset?.asset_tag || "—",
+          row.remarks || "—",
+        ];
+      });
+      break;
+    }
+
+    case "verification": {
+      title = "Verification Corrections Report";
+      headers = ["Date", "Employee Reported", "Condition", "Remarks", "Asset", "Tag", "Approved", "Applied"];
+      const { data } = await supabase
+        .from("verification_corrections")
+        .select(`
+          created_at, employee_reported, reported_condition, reported_remarks, admin_approved, applied,
+          asset:assets(asset_name, asset_tag),
+          form:forms(employee:employees(employee_name))
+        `)
+        .order("created_at", { ascending: false });
+
+      rows = (data || []).map((row) => {
+        const asset = row.asset as unknown as { asset_name: string; asset_tag: string } | null;
+        return [
+          formatDateTime(row.created_at),
+          row.employee_reported ? "Yes" : "No",
+          row.reported_condition ? capitalize(row.reported_condition) : "—",
+          row.reported_remarks || "—",
+          asset?.asset_name || "—",
+          asset?.asset_tag || "—",
+          row.admin_approved === true ? "Yes" : row.admin_approved === false ? "No" : "Pending",
+          row.applied ? "Yes" : "No",
+        ];
+      });
+      break;
+    }
+
+    case "pending-forms": {
+      title = "Pending Forms Report";
+      headers = ["Employee", "ID", "Action", "Status", "Created", "Expires"];
+      const { data } = await supabase
+        .from("forms")
+        .select(`
+          action_type, status, created_at, expires_at,
+          employee:employees(employee_name, employee_id)
+        `)
+        .eq("status", "pending")
+        .order("expires_at", { ascending: true });
+
+      rows = (data || []).map((row) => {
+        const emp = row.employee as unknown as { employee_name: string; employee_id: string } | null;
+        return [
+          emp?.employee_name || "—",
+          emp?.employee_id || "—",
+          capitalize(row.action_type),
+          capitalize(row.status),
+          formatDateTime(row.created_at),
+          formatDateTime(row.expires_at),
+        ];
+      });
+      break;
+    }
+
+    case "returns": {
+      title = "Asset Returns Report";
+      headers = ["Date", "Employee", "Asset", "Tag", "Condition", "Remarks"];
+      const { data } = await supabase
+        .from("asset_history")
+        .select(`
+          date, remarks,
+          employee:employees(employee_name),
+          asset:assets(asset_name, asset_tag, condition)
+        `)
+        .eq("action", "return")
+        .order("date", { ascending: false });
+
+      rows = (data || []).map((row) => {
+        const emp = row.employee as unknown as { employee_name: string } | null;
+        const asset = row.asset as unknown as { asset_name: string; asset_tag: string; condition: string } | null;
+        return [
+          formatDateTime(row.date),
+          emp?.employee_name || "—",
+          asset?.asset_name || "—",
+          asset?.asset_tag || "—",
+          asset?.condition ? capitalize(asset.condition) : "—",
+          row.remarks || "—",
+        ];
+      });
+      break;
+    }
+  }
+
+  const pdfBytes = generateReportPDF(title, headers, rows, companyName);
+  const filename = `${type}-report-${formatDate(new Date()).replace(/,/g, "").replace(/ /g, "-")}.pdf`;
+
+  return new NextResponse(Buffer.from(pdfBytes), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
+}
