@@ -24,6 +24,7 @@ const ACTION_LABELS: Record<FormActionType, string> = {
   exchange: "Exchange",
   return: "Return",
   verification: "Verification",
+  current_verification: "Current Asset Verification",
 };
 
 interface GenerateFormDialogProps {
@@ -76,7 +77,7 @@ export function GenerateFormDialog({
   }
 
   async function handleGenerate() {
-    if (selectedAssetIds.length === 0) {
+    if (selectedAssetIds.length === 0 && actionType !== "current_verification") {
       toast.error("Please select at least one asset");
       return;
     }
@@ -167,23 +168,31 @@ export function GenerateFormDialog({
         ) : (
           <>
             <div className="space-y-3">
-              <Label>
-                {actionType === "onboarding"
-                  ? "Select assets to assign"
-                  : actionType === "exchange"
-                    ? "Select new assets"
-                    : actionType === "return"
-                      ? "Select assets to return"
-                      : "Assets to verify"}
-              </Label>
-
-              {assetsToSelect.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {actionType === "onboarding" || actionType === "exchange"
-                    ? "No available assets found."
-                    : "This employee has no assigned assets."}
-                </p>
+              {actionType === "current_verification" ? (
+                <div className="rounded-md border p-4 bg-muted/30">
+                  <p className="text-sm text-muted-foreground">
+                    This will generate a link for the employee to declare all company assets currently in their possession. No assets need to be pre-selected.
+                  </p>
+                </div>
               ) : (
+                <>
+                  <Label>
+                    {actionType === "onboarding"
+                      ? "Select assets to assign"
+                      : actionType === "exchange"
+                        ? "Select new assets"
+                        : actionType === "return"
+                          ? "Select assets to return"
+                          : "Assets to verify"}
+                  </Label>
+
+                  {assetsToSelect.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {actionType === "onboarding" || actionType === "exchange"
+                        ? "No available assets found."
+                        : "This employee has no assigned assets."}
+                    </p>
+                  ) : (
                 <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3">
                   {assetsToSelect.map((asset) => (
                     <div key={asset.id} className="space-y-2">
@@ -232,6 +241,8 @@ export function GenerateFormDialog({
                   ))}
                 </div>
               )}
+                </>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -251,7 +262,7 @@ export function GenerateFormDialog({
               </Button>
               <Button
                 onClick={handleGenerate}
-                disabled={isGenerating || assetsToSelect.length === 0}
+                disabled={isGenerating || (assetsToSelect.length === 0 && actionType !== "current_verification")}
               >
                 {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
                 Generate Link
@@ -280,7 +291,7 @@ export function EmployeeActionButtons({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeAction, setActiveAction] = useState<FormActionType>("onboarding");
 
-  const actions: FormActionType[] = ["onboarding", "exchange", "return", "verification"];
+  const actions: FormActionType[] = ["onboarding", "exchange", "return", "verification", "current_verification"];
 
   function openDialog(actionType: FormActionType) {
     setActiveAction(actionType);

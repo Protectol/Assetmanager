@@ -35,7 +35,7 @@ export default async function PublicFormPage({
   const { data: settings } = await supabase
     .from("app_settings")
     .select("key, value")
-    .in("key", ["company_name", "company_logo_url"]);
+    .in("key", ["company_name", "company_logo_url", "asset_categories", "asset_rules"]);
 
   const settingsMap = Object.fromEntries((settings || []).map((s) => [s.key, s.value]));
 
@@ -55,6 +55,8 @@ export default async function PublicFormPage({
         form_assets: form.form_assets as unknown as Parameters<typeof EmployeeFormView>[0]["form"]["form_assets"],
         companyName: settingsMap.company_name || process.env.NEXT_PUBLIC_COMPANY_NAME,
         companyLogoUrl: settingsMap.company_logo_url || "",
+        assetCategories: settingsMap.asset_categories ? JSON.parse(settingsMap.asset_categories) : [],
+        assetRules: settingsMap.asset_rules ? JSON.parse(settingsMap.asset_rules) : [],
       }}
       readOnly={form.status === "completed"}
     />

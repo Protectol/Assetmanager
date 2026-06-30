@@ -7,8 +7,8 @@ import { createForm } from "@/lib/actions/forms";
 
 const createFormSchema = z.object({
   employeeId: z.string().uuid(),
-  actionType: z.enum(["onboarding", "exchange", "return", "verification"]),
-  assetIds: z.array(z.string().uuid()).min(1),
+  actionType: z.enum(["onboarding", "exchange", "return", "verification", "current_verification"]),
+  assetIds: z.array(z.string().uuid()).default([]),
   oldAssetIds: z.array(z.string().uuid()).optional(),
   notes: z.string().optional(),
 });
@@ -40,6 +40,13 @@ export async function POST(request: Request) {
   }
 
   const { employeeId, actionType, assetIds, oldAssetIds, notes } = parsed.data;
+
+  if (actionType !== "current_verification" && assetIds.length === 0) {
+    return NextResponse.json(
+      { error: "At least one asset must be selected for this action type" },
+      { status: 400 }
+    );
+  }
 
   if (actionType === "exchange") {
     if (!oldAssetIds || oldAssetIds.length !== assetIds.length) {

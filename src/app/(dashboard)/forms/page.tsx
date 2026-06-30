@@ -36,7 +36,7 @@ export default async function FormsPage({
 
   const { data: forms } = await query;
 
-  const statuses = ["all", "pending", "completed", "expired"];
+  const statuses = ["all", "pending", "completed", "approved", "rejected", "expired"];
   const currentStatus = params.status || "all";
 
   return (

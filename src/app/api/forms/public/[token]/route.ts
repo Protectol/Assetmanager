@@ -96,59 +96,66 @@ export async function POST(
   }
 
   const body = await request.json();
-  const { signature, signatureType, assets: assetSubmissions } = body as {
+  const { signature, signatureType, assets: assetSubmissions, submission_data: extraData } = body as {
     signature: string;
     signatureType: "draw" | "type";
     assets: AssetSubmission[];
+    submission_data?: Record<string, unknown>;
   };
 
   if (!signature) {
     return NextResponse.json({ error: "Signature is required" }, { status: 400 });
   }
 
-  for (const assetSub of assetSubmissions || []) {
-    const { error: updateError } = await supabase
+  // For current_verification, skip the standard form_assets update logic
+  let updatedFormAssets: unknown[] = [];
+
+  if (form.action_type !== "current_verification") {
+    for (const assetSub of assetSubmissions || []) {
+      const { error: updateError } = await supabase
+        .from("form_assets")
+        .update({
+          condition: assetSub.condition,
+          remarks: assetSub.remarks,
+          verified: assetSub.verified,
+        })
+        .eq("id", assetSub.id)
+        .eq("form_id", form.id);
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 400 });
+      }
+    }
+
+    const { data: assets } = await supabase
       .from("form_assets")
-      .update({
-        condition: assetSub.condition,
-        remarks: assetSub.remarks,
-        verified: assetSub.verified,
-      })
-      .eq("id", assetSub.id)
+      .select(`
+        *,
+        asset:assets!form_assets_asset_id_fkey(*),
+        old_asset:assets!form_assets_old_asset_id_fkey(*)
+      `)
       .eq("form_id", form.id);
+    updatedFormAssets = assets || [];
 
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 400 });
+    try {
+      switch (form.action_type) {
+        case "onboarding":
+          await processOnboardingSubmission(supabase, form.id, form.created_by);
+          break;
+        case "exchange":
+          await processExchangeSubmission(supabase, form.id, form.created_by);
+          break;
+        case "return":
+          await processReturnSubmission(supabase, form.id, form.created_by);
+          break;
+        case "verification":
+          await processVerificationSubmission(supabase, form.id);
+          break;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to process submission";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
-  }
-
-  const { data: updatedFormAssets } = await supabase
-    .from("form_assets")
-    .select(`
-      *,
-      asset:assets!form_assets_asset_id_fkey(*),
-      old_asset:assets!form_assets_old_asset_id_fkey(*)
-    `)
-    .eq("form_id", form.id);
-
-  try {
-    switch (form.action_type) {
-      case "onboarding":
-        await processOnboardingSubmission(supabase, form.id, form.created_by);
-        break;
-      case "exchange":
-        await processExchangeSubmission(supabase, form.id, form.created_by);
-        break;
-      case "return":
-        await processReturnSubmission(supabase, form.id, form.created_by);
-        break;
-      case "verification":
-        await processVerificationSubmission(supabase, form.id);
-        break;
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to process submission";
-    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   const { data: settings } = await supabase
@@ -157,26 +164,34 @@ export async function POST(
     .eq("key", "company_name")
     .single();
 
-  const pdfBytes = generateFormPDF({
-    form: form as Form,
-    employee: form.employee as Employee,
-    formAssets: (updatedFormAssets || []) as (FormAsset & { asset?: Asset; old_asset?: Asset })[],
-    signature,
-    signatureType: signatureType || "draw",
-    companyName: settings?.value || process.env.NEXT_PUBLIC_COMPANY_NAME,
-  });
+  let pdfUrl: string | null = null;
 
-  const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
-  const pdfUrl = `data:application/pdf;base64,${pdfBase64}`;
+  // Only generate PDF for standard form types
+  if (form.action_type !== "current_verification") {
+    const pdfBytes = generateFormPDF({
+      form: form as Form,
+      employee: form.employee as Employee,
+      formAssets: (updatedFormAssets || []) as (FormAsset & { asset?: Asset; old_asset?: Asset })[],
+      signature,
+      signatureType: signatureType || "draw",
+      companyName: settings?.value || process.env.NEXT_PUBLIC_COMPANY_NAME,
+    });
+    const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+    pdfUrl = `data:application/pdf;base64,${pdfBase64}`;
+  }
 
   const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "";
   const userAgent = request.headers.get("user-agent") || "";
+
+  const submissionData = form.action_type === "current_verification"
+    ? { ...(extraData || {}), declared_assets: extraData?.declared_assets }
+    : { assets: assetSubmissions };
 
   const { error: submissionError } = await supabase.from("form_submissions").insert({
     form_id: form.id,
     employee_signature: signature,
     signature_type: signatureType || "draw",
-    submission_data: { assets: assetSubmissions },
+    submission_data: submissionData,
     pdf_url: pdfUrl,
     ip_address: ip,
     user_agent: userAgent,
@@ -186,6 +201,7 @@ export async function POST(
     return NextResponse.json({ error: submissionError.message }, { status: 500 });
   }
 
+  // current_verification goes to 'completed', awaiting admin approval
   await supabase.from("forms").update({ status: "completed" }).eq("id", form.id);
 
   return NextResponse.json({ success: true, pdfUrl });

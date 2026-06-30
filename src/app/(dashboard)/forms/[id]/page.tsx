@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireAuth } from "@/lib/auth";
 import { FormDetailClient } from "@/components/forms/form-detail-client";
 import type { Form, FormAsset, FormSubmission, Employee, Asset } from "@/types";
 
@@ -9,7 +10,7 @@ export default async function FormDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const [user, supabase] = await Promise.all([requireAuth(), createClient()]);
 
   const { data: form, error } = await supabase
     .from("forms")
@@ -28,6 +29,13 @@ export default async function FormDetailPage({
 
   if (error || !form) notFound();
 
+  const { data: settings } = await supabase
+    .from("app_settings")
+    .select("key, value")
+    .in("key", ["email_default_to", "email_default_cc", "email_subject_template", "email_body_template"]);
+
+  const sm = Object.fromEntries((settings || []).map((s) => [s.key, s.value]));
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
   const fullLink = `${appUrl}/form/${form.token}`;
 
@@ -40,6 +48,13 @@ export default async function FormDetailPage({
         submission: form.submission as unknown as FormSubmission | undefined,
         fullLink,
       }}
+      emailSettings={{
+        default_to: sm.email_default_to || "",
+        default_cc: sm.email_default_cc || "",
+        subject_template: sm.email_subject_template || "",
+        body_template: sm.email_body_template || "",
+      }}
+      adminName={user.full_name}
     />
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { SignaturePad } from "@/components/shared/signature-pad";
 import { capitalize } from "@/lib/utils";
+import { CurrentVerificationView, type DeclaredAsset } from "./current-verification-view";
 import type { AssetCondition, FormActionType } from "@/types";
 
 interface FormAssetData {
@@ -64,6 +65,11 @@ interface FormData {
   form_assets: FormAssetData[];
   companyName?: string;
   companyLogoUrl?: string;
+  assetCategories?: string[];
+  assetRules?: Array<{
+    condition: { category: string; value: string };
+    requirement: { category: string; value: string };
+  }>;
 }
 
 interface EmployeeFormViewProps {
@@ -76,6 +82,7 @@ const actionTitles: Record<FormActionType, string> = {
   exchange: "Asset Exchange",
   return: "Asset Return / Clearance",
   verification: "Asset Verification",
+  current_verification: "Current Asset Declaration",
 };
 
 const actionDescriptions: Record<FormActionType, string> = {
@@ -83,6 +90,7 @@ const actionDescriptions: Record<FormActionType, string> = {
   exchange: "Please review the asset exchange details and sign to confirm.",
   return: "Please confirm the return of the listed assets and their condition.",
   verification: "Please verify the assets assigned to you and report any discrepancies.",
+  current_verification: "Please declare all company assets currently in your possession.",
 };
 
 export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewProps) {
@@ -102,6 +110,8 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
     });
     return initial;
   });
+  const [dynamicAssets, setDynamicAssets] = useState<DeclaredAsset[]>([]);
+  const [isDynamicValid, setIsDynamicValid] = useState(false);
 
   const isExpired = form.status === "expired" || new Date(form.expires_at) < new Date();
   const isDisabled = readOnly || submitted || isExpired || form.status !== "pending";
@@ -127,12 +137,15 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
         body: JSON.stringify({
           signature,
           signatureType,
-          assets: form.form_assets.map((fa) => ({
+          assets: form.action_type === "current_verification" ? [] : form.form_assets.map((fa) => ({
             id: fa.id,
             condition: assetData[fa.id]?.condition,
             remarks: assetData[fa.id]?.remarks,
             verified: assetData[fa.id]?.verified,
           })),
+          submission_data: form.action_type === "current_verification" ? {
+            declared_assets: dynamicAssets.filter(a => a.has_asset)
+          } : undefined
         }),
       });
 
@@ -154,12 +167,15 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-        <div className="w-full max-w-md rounded-2xl border bg-white p-8 text-center shadow-lg">
-          <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
-          <h1 className="mt-4 text-2xl font-semibold text-slate-900">Form Submitted</h1>
-          <p className="mt-2 text-slate-600">
-            Thank you, {form.employee.employee_name}. Your {actionTitles[form.action_type].toLowerCase()} form has been submitted successfully.
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground transition-colors duration-300 p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
+        <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-lg relative z-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 shadow-sm border border-emerald-100 dark:border-emerald-900/20">
+            <CheckCircle2 className="h-10 w-10 animate-bounce" />
+          </div>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-foreground">Form Submitted</h1>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            Thank you, <span className="font-semibold text-foreground">{form.employee.employee_name}</span>. Your {actionTitles[form.action_type].toLowerCase()} form has been submitted successfully.
           </p>
         </div>
       </div>
@@ -168,11 +184,17 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
 
   if (isExpired) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-        <div className="w-full max-w-md rounded-2xl border bg-white p-8 text-center shadow-lg">
-          <h1 className="text-2xl font-semibold text-slate-900">Form Expired</h1>
-          <p className="mt-2 text-slate-600">
-            This form link has expired. Please contact your IT or HR department for a new link.
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground transition-colors duration-300 p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-destructive/5 to-transparent pointer-events-none" />
+        <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-8 text-center shadow-lg relative z-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive shadow-sm border border-destructive/20">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-foreground">Link Expired</h1>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            This secure form link has expired. Please contact your IT or HR department to generate a new verification link.
           </p>
         </div>
       </div>
@@ -183,136 +205,229 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
   const isVerification = form.action_type === "verification";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-hidden">
+      {/* Premium subtle background glow */}
+      <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent pointer-events-none" />
+      
+      <div className="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-10 text-center flex flex-col items-center">
           {form.companyLogoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={form.companyLogoUrl}
-              alt={form.companyName || "Company"}
-              className="mx-auto mb-4 h-12 object-contain"
-            />
+            <div className="mb-4 p-2.5 bg-white dark:bg-zinc-950 rounded-2xl shadow-sm border border-border/40 inline-flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={form.companyLogoUrl}
+                alt={form.companyName || "Company logo"}
+                className="h-12 w-auto object-contain max-w-[200px]"
+              />
+            </div>
           ) : (
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-lg font-bold text-white">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-primary/80 text-xl font-bold text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-background">
               {(form.companyName || "C").charAt(0)}
             </div>
           )}
-          <h1 className="text-2xl font-bold text-slate-900">{form.companyName}</h1>
-          <h2 className="mt-2 text-lg font-medium text-slate-700">{actionTitles[form.action_type]}</h2>
-          <p className="mt-1 text-sm text-slate-500">{actionDescriptions[form.action_type]}</p>
+          
+          {/* Only display text name if logo is absent or as secondary branding */}
+          {!form.companyLogoUrl && (
+            <h1 className="text-xl font-semibold tracking-tight text-muted-foreground">{form.companyName}</h1>
+          )}
+          
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            {actionTitles[form.action_type]}
+          </h2>
+          <p className="mt-2.5 text-sm text-muted-foreground max-w-md leading-relaxed">
+            {actionDescriptions[form.action_type]}
+          </p>
         </div>
 
         {/* Employee Details */}
-        <div className="mb-6 rounded-2xl border bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        <div className="mb-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Employee Information
           </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-4 grid-cols-2 sm:grid-cols-3">
             {[
               ["Name", form.employee.employee_name],
               ["Employee ID", form.employee.employee_id],
+              ["Email Address", form.employee.email],
               ["Department", form.employee.department],
               ["Designation", form.employee.designation],
-              ["Location", form.employee.location],
-              ["Email", form.employee.email],
+              ["Work Location", form.employee.location],
             ].map(([label, value]) => (
-              <div key={label}>
-                <p className="text-xs text-slate-500">{label}</p>
-                <p className="text-sm font-medium text-slate-900">{value}</p>
+              <div key={label} className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">{label}</p>
+                <p className="text-sm font-semibold text-foreground tracking-tight">{value || "—"}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Assets */}
-        <div className="mb-6 rounded-2xl border bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            {isExchange ? "Asset Exchange Details" : "Assets"}
+        {form.action_type === "current_verification" ? (
+          <div className="mb-6">
+            <CurrentVerificationView
+              categories={form.assetCategories || []}
+              rules={form.assetRules || []}
+              disabled={isDisabled}
+              onDataChange={(assets, isValid) => {
+                setDynamicAssets(assets);
+                setIsDynamicValid(isValid);
+              }}
+            />
+          </div>
+        ) : (
+        <div className="mb-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
+          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {isExchange ? "Asset Exchange Details" : "Asset Details"}
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {form.form_assets.map((fa) => (
-              <div key={fa.id} className="rounded-xl border border-slate-200 p-4">
-                {isExchange && fa.old_asset && (
-                  <div className="mb-3 rounded-lg bg-slate-50 p-3">
-                    <p className="text-xs font-medium text-slate-500">Returning</p>
-                    <p className="text-sm font-medium">{fa.old_asset.asset_name}</p>
-                    <p className="text-xs text-slate-500">Tag: {fa.old_asset.asset_tag}</p>
-                  </div>
-                )}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      {isExchange ? "Receiving" : ""} {fa.asset?.asset_name}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-                      <span>Tag: {fa.asset?.asset_tag}</span>
-                      {fa.asset?.serial_number && <span>SN: {fa.asset.serial_number}</span>}
-                      <span>Type: {fa.asset?.asset_type}</span>
+              <div key={fa.id} className="rounded-xl border border-border/60 bg-background/50 p-5 space-y-4">
+                
+                {isExchange && fa.old_asset ? (
+                  <div className="grid gap-4 md:grid-cols-2 items-stretch">
+                    {/* Returning Card */}
+                    <div className="rounded-lg border border-red-200/40 bg-red-50/20 dark:bg-red-950/10 dark:border-red-900/30 p-4 relative overflow-hidden flex flex-col justify-between">
+                      <div>
+                        <div className="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 text-[10px] font-bold rounded uppercase tracking-wide mb-2">
+                          Returning
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{fa.old_asset.asset_name}</p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-900 border border-border/50 text-[10px] font-mono text-muted-foreground">
+                          Tag: {fa.old_asset.asset_tag}
+                        </span>
+                        {fa.old_asset.serial_number && (
+                          <span className="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-900 border border-border/50 text-[10px] font-mono text-muted-foreground">
+                            SN: {fa.old_asset.serial_number}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Receiving Card */}
+                    <div className="rounded-lg border border-emerald-200/40 bg-emerald-50/15 dark:bg-emerald-950/10 dark:border-emerald-900/30 p-4 relative overflow-hidden flex flex-col justify-between">
+                      <div>
+                        <div className="inline-block px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded uppercase tracking-wide mb-2">
+                          Receiving
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{fa.asset?.asset_name}</p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-900 border border-border/50 text-[10px] font-mono text-muted-foreground">
+                          Tag: {fa.asset?.asset_tag}
+                        </span>
+                        {fa.asset?.serial_number && (
+                          <span className="px-2 py-0.5 rounded-md bg-white dark:bg-zinc-900 border border-border/50 text-[10px] font-mono text-muted-foreground">
+                            SN: {fa.asset.serial_number}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  /* Standard single asset display */
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <p className="text-base font-bold text-foreground tracking-tight">
+                        {fa.asset?.asset_name}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-muted border border-border/60 text-[10px] font-mono font-medium text-muted-foreground">
+                          Tag: {fa.asset?.asset_tag}
+                        </span>
+                        {fa.asset?.serial_number && (
+                          <span className="px-2 py-0.5 rounded-md bg-muted border border-border/60 text-[10px] font-mono font-medium text-muted-foreground">
+                            SN: {fa.asset.serial_number}
+                          </span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-md bg-muted border border-border/60 text-[10px] font-medium text-muted-foreground">
+                          {fa.asset?.asset_type}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {/* Status validation fields */}
+                <div className="pt-4 border-t border-border/40 space-y-4">
                   {isVerification && (
-                    <div className="flex items-center gap-2 sm:col-span-2">
+                    <div className="flex items-center space-x-2.5 bg-muted/40 p-3 rounded-lg border border-border/40">
                       <Checkbox
                         id={`verified-${fa.id}`}
                         checked={assetData[fa.id]?.verified ?? true}
                         onCheckedChange={(checked) => updateAsset(fa.id, "verified", !!checked)}
                         disabled={isDisabled}
+                        className="h-4 w-4 rounded border-input"
                       />
-                      <Label htmlFor={`verified-${fa.id}`} className="text-sm">
-                        I confirm this asset is in my possession
+                      <Label htmlFor={`verified-${fa.id}`} className="text-sm font-semibold leading-none cursor-pointer select-none">
+                        I confirm this asset is in my possession and details are correct
                       </Label>
                     </div>
                   )}
-                  <div>
-                    <Label className="text-xs">Condition</Label>
-                    <Select
-                      value={assetData[fa.id]?.condition || "good"}
-                      onValueChange={(v) => updateAsset(fa.id, "condition", v)}
-                      disabled={isDisabled}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(["new", "good", "damaged", "lost"] as AssetCondition[]).map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {capitalize(c)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label className="text-xs">Remarks</Label>
-                    <Textarea
-                      className="mt-1"
-                      placeholder="Optional remarks..."
-                      value={assetData[fa.id]?.remarks || ""}
-                      onChange={(e) => updateAsset(fa.id, "remarks", e.target.value)}
-                      disabled={isDisabled}
-                      rows={2}
-                    />
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="sm:col-span-1">
+                      <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">Reported Condition</Label>
+                      <Select
+                        value={assetData[fa.id]?.condition || "good"}
+                        onValueChange={(v) => updateAsset(fa.id, "condition", v)}
+                        disabled={isDisabled}
+                      >
+                        <SelectTrigger className="w-full bg-background border-border/80">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(["new", "good", "damaged", "lost"] as AssetCondition[]).map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {capitalize(c)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">Additional Remarks</Label>
+                      <Textarea
+                        placeholder="e.g. Minor scratches, missing cables, etc. (optional)"
+                        value={assetData[fa.id]?.remarks || ""}
+                        onChange={(e) => updateAsset(fa.id, "remarks", e.target.value)}
+                        disabled={isDisabled}
+                        rows={1}
+                        className="min-h-[38px] py-2 bg-background border-border/80 resize-none text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                    </div>
                   </div>
                 </div>
+
               </div>
             ))}
           </div>
         </div>
+        )}
 
         {form.notes && (
-          <div className="mb-6 rounded-2xl border bg-amber-50 p-4">
-            <p className="text-xs font-medium text-amber-800">Notes from IT/HR</p>
-            <p className="mt-1 text-sm text-amber-900">{form.notes}</p>
+          <div className="mb-6 rounded-2xl border border-amber-200/40 bg-amber-50/35 dark:bg-amber-950/10 dark:border-amber-900/30 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">Notes from IT/HR</p>
+            <p className="mt-1.5 text-sm text-amber-900 dark:text-amber-200 leading-relaxed font-medium">{form.notes}</p>
           </div>
         )}
 
         {/* Signature */}
-        <div className="mb-6 rounded-2xl border bg-white p-6 shadow-sm">
+        {form.action_type === "current_verification" && (
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+            <h4 className="font-bold text-foreground mb-2">Employee Acknowledgement</h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              &quot;I confirm that the above company assets are currently in my possession and the information provided is accurate to the best of my knowledge. I understand that these assets remain company property and must be returned upon request or at the time of separation.&quot;
+            </p>
+          </div>
+        )}
+
+        <div className="mb-8 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
           <SignaturePad
             onSignatureChange={(sig, type) => {
               setSignature(sig);
@@ -322,21 +437,21 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
           />
         </div>
 
-        {/* Submit */}
-        <div className="flex justify-center pb-8">
+        {/* Submit Button */}
+        <div className="flex justify-center pb-12">
           <Button
             size="lg"
-            className="min-w-[200px]"
+            className="min-w-[240px] h-12 text-sm font-semibold tracking-wide rounded-xl bg-primary hover:bg-primary/95 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-primary/10"
             onClick={handleSubmit}
-            disabled={isDisabled || submitting || !signature}
+            disabled={isDisabled || submitting || !signature || (!isDynamicValid && form.action_type === "current_verification")}
           >
             {submitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting Form...
               </>
             ) : (
-              "Submit Form"
+              "Submit Verification Form"
             )}
           </Button>
         </div>

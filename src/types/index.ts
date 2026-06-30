@@ -2,8 +2,8 @@ export type UserRole = "admin" | "it" | "hr";
 export type EmployeeStatus = "active" | "inactive" | "resigned" | "on_leave";
 export type AssetCondition = "new" | "good" | "damaged" | "lost";
 export type AssetStatus = "available" | "assigned" | "repair" | "lost" | "returned";
-export type FormActionType = "onboarding" | "exchange" | "return" | "verification";
-export type FormStatus = "pending" | "completed" | "expired";
+export type FormActionType = "onboarding" | "exchange" | "return" | "verification" | "current_verification";
+export type FormStatus = "pending" | "completed" | "expired" | "approved" | "rejected";
 export type HistoryAction =
   | "onboarding"
   | "exchange"
