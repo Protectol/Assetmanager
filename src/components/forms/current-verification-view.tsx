@@ -189,19 +189,19 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
-        <h3 className="mb-6 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="rounded-2xl border border-border/60 bg-white dark:bg-zinc-900/80 p-4 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
+        <h3 className="mb-5 sm:mb-6 text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground/80">
           Asset Declaration Questionnaire
         </h3>
 
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {assets.map((asset) => {
             const isStandard = !asset.isCustom;
             const template = CATEGORY_TEMPLATES[asset.category] || DEFAULT_FIELDS;
 
             return (
-              <div key={asset.id} className={`rounded-xl border transition-colors ${asset.has_asset ? 'border-primary/50 bg-primary/5' : 'border-border/60 bg-background/50'} p-5 space-y-4`}>
+              <div key={asset.id} className={`rounded-xl border transition-colors ${asset.has_asset ? 'border-primary/50 bg-primary/5 dark:bg-primary/10' : 'border-border/60 bg-slate-50/50 dark:bg-zinc-800/30'} p-4 sm:p-5 space-y-4 shadow-sm`}>
                 
                 {isStandard ? (
                   <div className="flex items-center space-x-3">
@@ -225,7 +225,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                         value={asset.category}
                         onChange={(e) => updateAsset(asset.id, { category: e.target.value })}
                         disabled={disabled}
-                        className="bg-background"
+                        className="bg-white dark:bg-zinc-900 border-border/60"
                       />
                     </div>
                     <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeCustomAsset(asset.id)} disabled={disabled}>
@@ -246,7 +246,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             value={asset.fields[field.name] || ""}
                             onChange={(e) => updateField(asset.id, field.name, e.target.value)}
                             disabled={disabled}
-                            className="bg-background"
+                            className="bg-white dark:bg-zinc-900 border-border/60"
                           />
                         </div>
                       ))}
@@ -261,7 +261,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             onValueChange={(v) => updateAsset(asset.id, { condition: v as AssetCondition })}
                             disabled={disabled}
                           >
-                            <SelectTrigger className="w-full bg-background">
+                          <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/60">
                               <SelectValue placeholder="Select condition" />
                             </SelectTrigger>
                             <SelectContent>
@@ -279,7 +279,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             onChange={(e) => updateAsset(asset.id, { remarks: e.target.value })}
                             disabled={disabled}
                             rows={1}
-                            className="min-h-[38px] bg-background resize-none"
+                            className="min-h-[38px] bg-white dark:bg-zinc-900 border-border/60 resize-none"
                           />
                         </div>
                       </div>

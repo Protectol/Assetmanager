@@ -205,48 +205,48 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
   const isVerification = form.action_type === "verification";
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground transition-colors duration-300 relative overflow-hidden">
       {/* Premium subtle background glow */}
-      <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-primary/5 via-primary/[0.02] to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary/10 via-primary/[0.03] to-transparent pointer-events-none dark:from-primary/20 dark:via-primary/[0.05]" />
       
-      <div className="relative mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+      <div className="relative mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
         {/* Header */}
-        <div className="mb-10 text-center flex flex-col items-center">
+        <div className="mb-8 sm:mb-10 text-center flex flex-col items-center">
           {form.companyLogoUrl ? (
-            <div className="mb-4 p-2.5 bg-white dark:bg-zinc-950 rounded-2xl shadow-sm border border-border/40 inline-flex items-center justify-center">
+            <div className="mb-4 p-2 sm:p-2.5 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-border/40 inline-flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={form.companyLogoUrl}
                 alt={form.companyName || "Company logo"}
-                className="h-12 w-auto object-contain max-w-[200px]"
+                className="h-10 sm:h-12 w-auto object-contain max-w-[160px] sm:max-w-[200px]"
               />
             </div>
           ) : (
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-primary/80 text-xl font-bold text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-background">
+            <div className="mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-primary/80 text-lg sm:text-xl font-bold text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-background">
               {(form.companyName || "C").charAt(0)}
             </div>
           )}
           
           {/* Only display text name if logo is absent or as secondary branding */}
           {!form.companyLogoUrl && (
-            <h1 className="text-xl font-semibold tracking-tight text-muted-foreground">{form.companyName}</h1>
+            <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-muted-foreground">{form.companyName}</h1>
           )}
           
-          <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h2 className="mt-2 text-xl sm:text-2xl font-extrabold tracking-tight text-foreground md:text-3xl">
             {actionTitles[form.action_type]}
           </h2>
-          <p className="mt-2.5 text-sm text-muted-foreground max-w-md leading-relaxed">
+          <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-md leading-relaxed px-2">
             {actionDescriptions[form.action_type]}
           </p>
         </div>
 
         {/* Employee Details */}
-        <div className="mb-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-6 rounded-2xl border border-border/60 bg-white dark:bg-zinc-900/80 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
             Employee Information
           </h3>
-          <div className="grid gap-x-6 gap-y-4 grid-cols-2 sm:grid-cols-3">
+          <div className="grid gap-x-4 gap-y-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Name", form.employee.employee_name],
               ["Employee ID", form.employee.employee_id],
@@ -255,9 +255,9 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
               ["Designation", form.employee.designation],
               ["Work Location", form.employee.location],
             ].map(([label, value]) => (
-              <div key={label} className="space-y-1">
-                <p className="text-xs text-muted-foreground font-medium">{label}</p>
-                <p className="text-sm font-semibold text-foreground tracking-tight">{value || "—"}</p>
+              <div key={label} className="space-y-1 bg-slate-50/50 dark:bg-zinc-800/30 p-2.5 rounded-lg border border-border/40">
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
+                <p className="text-sm font-semibold text-foreground tracking-tight break-words">{value || "—"}</p>
               </div>
             ))}
           </div>
@@ -277,14 +277,14 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
             />
           </div>
         ) : (
-        <div className="mb-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="mb-6 rounded-2xl border border-border/60 bg-white dark:bg-zinc-900/80 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
             {isExchange ? "Asset Exchange Details" : "Asset Details"}
           </h3>
           <div className="space-y-6">
             {form.form_assets.map((fa) => (
-              <div key={fa.id} className="rounded-xl border border-border/60 bg-background/50 p-5 space-y-4">
+              <div key={fa.id} className="rounded-xl border border-border/60 bg-slate-50/50 dark:bg-zinc-800/30 p-4 sm:p-5 space-y-4 shadow-sm">
                 
                 {isExchange && fa.old_asset ? (
                   <div className="grid gap-4 md:grid-cols-2 items-stretch">
@@ -377,7 +377,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
                         onValueChange={(v) => updateAsset(fa.id, "condition", v)}
                         disabled={isDisabled}
                       >
-                        <SelectTrigger className="w-full bg-background border-border/80">
+                        <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/80">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -397,7 +397,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
                         onChange={(e) => updateAsset(fa.id, "remarks", e.target.value)}
                         disabled={isDisabled}
                         rows={1}
-                        className="min-h-[38px] py-2 bg-background border-border/80 resize-none text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring"
+                        className="min-h-[38px] py-2 bg-white dark:bg-zinc-900 border-border/80 resize-none text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </div>
                   </div>
@@ -418,7 +418,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
 
         {/* Signature */}
         {form.action_type === "current_verification" && (
-          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 p-5 sm:p-6 shadow-sm">
             <h4 className="font-bold text-foreground mb-2">Employee Acknowledgement</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
               &quot;I confirm that the above company assets are currently in my possession and the information provided is accurate to the best of my knowledge. I understand that these assets remain company property and must be returned upon request or at the time of separation.&quot;
@@ -426,8 +426,8 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
           </div>
         )}
 
-        <div className="mb-8 rounded-2xl border border-border/80 bg-card p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20" />
+        <div className="mb-8 rounded-2xl border border-border/60 bg-white dark:bg-zinc-900/80 p-4 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
           <SignaturePad
             onSignatureChange={(sig, type) => {
               setSignature(sig);
