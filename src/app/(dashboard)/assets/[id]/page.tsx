@@ -131,7 +131,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
             {typedAssignment?.employee ? (
               <dl className="grid gap-4 sm:grid-cols-2">
                 <DetailField
-                  label="Employee"
+                  label="Team Member"
                   value={
                     <Link
                       href={`/employees/${typedAssignment.employee.id}`}
@@ -141,7 +141,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
                     </Link>
                   }
                 />
-                <DetailField label="Employee ID" value={typedAssignment.employee.employee_id} />
+                <DetailField label="Team Member ID" value={typedAssignment.employee.employee_id} />
                 <DetailField label="Department" value={typedAssignment.employee.department} />
                 <DetailField label="Assigned Date" value={formatDateTime(typedAssignment.assigned_date)} />
                 <DetailField
@@ -202,7 +202,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
                     <div className="text-sm">
                       {item.employee && (
                         <p>
-                          Employee:{" "}
+                          Team Member:{" "}
                           <Link
                             href={`/employees/${item.employee_id}`}
                             className="text-primary hover:underline"

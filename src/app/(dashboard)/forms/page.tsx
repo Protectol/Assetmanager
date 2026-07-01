@@ -74,7 +74,7 @@ export default async function FormsPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Employee</TableHead>
+                  <TableHead>Team Member</TableHead>
                   <TableHead>Action</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>

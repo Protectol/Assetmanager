@@ -24,8 +24,8 @@ import type { Employee, EmployeeStatus } from "@/types";
 const employeeStatuses: EmployeeStatus[] = ["active", "inactive", "resigned", "on_leave"];
 
 const employeeSchema = z.object({
-  employee_name: z.string().min(1, "Employee name is required"),
-  employee_id: z.string().min(1, "Employee ID is required"),
+  employee_name: z.string().min(1, "Team Member name is required"),
+  employee_id: z.string().min(1, "Team Member ID is required"),
   department: z.string().min(1, "Department is required"),
   designation: z.string().min(1, "Designation is required"),
   location: z.string().min(1, "Location is required"),
@@ -95,7 +95,7 @@ export function EmployeeForm({ employee, mode }: EmployeeFormProps) {
 
         if (error) throw error;
 
-        toast.success("Employee created successfully");
+        toast.success("Team Member created successfully");
         router.push(`/employees/${data.id}`);
         router.refresh();
       } else if (employee) {
@@ -106,7 +106,7 @@ export function EmployeeForm({ employee, mode }: EmployeeFormProps) {
 
         if (error) throw error;
 
-        toast.success("Employee updated successfully");
+        toast.success("Team Member updated successfully");
         router.push(`/employees/${employee.id}`);
         router.refresh();
       }
@@ -125,7 +125,7 @@ export function EmployeeForm({ employee, mode }: EmployeeFormProps) {
       <Card>
         <CardContent className="grid gap-6 pt-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="employee_name">Employee Name</Label>
+            <Label htmlFor="employee_name">Team Member Name</Label>
             <Input id="employee_name" {...register("employee_name")} />
             {errors.employee_name && (
               <p className="text-sm text-destructive">{errors.employee_name.message}</p>
@@ -133,7 +133,7 @@ export function EmployeeForm({ employee, mode }: EmployeeFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="employee_id">Employee ID</Label>
+            <Label htmlFor="employee_id">Team Member ID</Label>
             <Input id="employee_id" {...register("employee_id")} />
             {errors.employee_id && (
               <p className="text-sm text-destructive">{errors.employee_id.message}</p>
@@ -216,7 +216,7 @@ export function EmployeeForm({ employee, mode }: EmployeeFormProps) {
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <LoadingSpinner size="sm" />}
-            {mode === "create" ? "Create Employee" : "Save Changes"}
+            {mode === "create" ? "Create Team Member" : "Save Changes"}
           </Button>
         </CardFooter>
       </Card>

@@ -121,8 +121,8 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
       .join("\n\n");
 
     const replacements: Record<string, string> = {
-      "[Employee Name]": emp.employee_name,
-      "[Employee ID]": emp.employee_id,
+      "[Team Member Name]": emp.employee_name,
+      "[Team Member ID]": emp.employee_id,
       "[Department]": emp.department,
       "[Designation]": emp.designation,
       "[Location]": emp.location,
@@ -199,7 +199,7 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
 
             {formStatus === "pending" && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Employee Form Link</p>
+                <p className="text-sm font-medium">Team Member Form Link</p>
                 <div className="flex gap-2">
                   <code className="flex-1 truncate rounded-md border bg-muted px-3 py-2 text-xs">{form.fullLink}</code>
                   <Button variant="outline" size="icon" onClick={copyLink}><Copy className="h-4 w-4" /></Button>
@@ -297,7 +297,7 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
 
         {/* Employee Info */}
         <Card>
-          <CardHeader><CardTitle>Employee</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Team Member</CardTitle></CardHeader>
           <CardContent>
             {form.employee && (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -381,7 +381,7 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
                 ) : (
                   <img
                     src={form.submission.employee_signature}
-                    alt="Employee Signature"
+                    alt="Team Member Signature"
                     className="h-16 max-w-xs border rounded-md bg-white dark:bg-zinc-950 p-2"
                   />
                 )}

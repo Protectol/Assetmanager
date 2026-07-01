@@ -26,7 +26,7 @@ export function RecentActivity({ history }: RecentActivityProps) {
                 <TableHead>Date</TableHead>
                 <TableHead>Action</TableHead>
                 <TableHead>Asset</TableHead>
-                <TableHead>Employee</TableHead>
+                <TableHead>Team Member</TableHead>
                 <TableHead>Performed By</TableHead>
               </TableRow>
             </TableHeader>

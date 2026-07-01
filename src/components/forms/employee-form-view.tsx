@@ -240,16 +240,16 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
           </p>
         </div>
 
-        {/* Employee Details */}
+        {/* Team Member Details */}
         <div className="mb-6 rounded-2xl border border-border/60 bg-white dark:bg-zinc-900/80 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30" />
           <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-            Employee Information
+            Team Member Information
           </h3>
           <div className="grid gap-x-4 gap-y-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Name", form.employee.employee_name],
-              ["Employee ID", form.employee.employee_id],
+              ["Team Member ID", form.employee.employee_id],
               ["Email Address", form.employee.email],
               ["Department", form.employee.department],
               ["Designation", form.employee.designation],
@@ -419,7 +419,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
         {/* Signature */}
         {form.action_type === "current_verification" && (
           <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 p-5 sm:p-6 shadow-sm">
-            <h4 className="font-bold text-foreground mb-2">Employee Acknowledgement</h4>
+            <h4 className="font-bold text-foreground mb-2">Team Member Acknowledgement</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
               &quot;I confirm that the above company assets are currently in my possession and the information provided is accurate to the best of my knowledge. I understand that these assets remain company property and must be returned upon request or at the time of separation.&quot;
             </p>

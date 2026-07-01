@@ -13,7 +13,7 @@ export default function NewEmployeePage() {
           </Link>
         </Button>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Add Employee</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Add Team Member</h2>
           <p className="text-muted-foreground">Create a new employee record</p>
         </div>
       </div>

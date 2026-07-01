@@ -36,16 +36,16 @@ export function generateFormPDF(data: PDFData): Uint8Array {
   doc.setDrawColor(226, 232, 240);
   doc.line(20, 35, 190, 35);
 
-  // Employee Information
+  // Team Member Information
   doc.setFontSize(12);
   doc.setTextColor(45, 55, 72);
-  doc.text("Employee Information", 20, 45);
+  doc.text("Team Member Information", 20, 45);
 
   doc.setFontSize(10);
   doc.setTextColor(71, 85, 105);
   const empInfo = [
     ["Name", data.employee.employee_name],
-    ["Employee ID", data.employee.employee_id],
+    ["Team Member ID", data.employee.employee_id],
     ["Department", data.employee.department],
     ["Designation", data.employee.designation],
     ["Location", data.employee.location],
@@ -140,7 +140,7 @@ export function generateFormPDF(data: PDFData): Uint8Array {
 
   // Employee Signature
   doc.setFont("helvetica", "bold");
-  doc.text("Employee Signature:", 20, yPos);
+  doc.text("Team Member Signature:", 20, yPos);
   yPos += 5;
 
   if (data.signatureType === "draw" && data.signature.startsWith("data:")) {

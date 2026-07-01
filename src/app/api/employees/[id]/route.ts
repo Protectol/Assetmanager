@@ -25,7 +25,7 @@ export async function GET(
     .eq("id", id)
     .single();
 
-  if (error) return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+  if (error) return NextResponse.json({ error: "Team Member not found" }, { status: 404 });
   return NextResponse.json(data);
 }
 

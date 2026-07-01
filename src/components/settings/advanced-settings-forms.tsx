@@ -81,11 +81,11 @@ export function EmailSettingsForm({ initial, isAdmin }: EmailSettingsProps) {
           value={values.email_subject_template}
           onChange={(e) => setValues({ ...values, email_subject_template: e.target.value })}
           disabled={!isAdmin}
-          placeholder="Asset Assignment Update - [Employee Name] - [Employee ID]"
+          placeholder="Asset Assignment Update - [Team Member Name] - [Team Member ID]"
           className="mt-1"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Use: [Employee Name], [Employee ID], [Department]
+          Use: [Team Member Name], [Team Member ID], [Department]
         </p>
       </div>
       <div>
@@ -99,7 +99,7 @@ export function EmailSettingsForm({ initial, isAdmin }: EmailSettingsProps) {
           className="mt-1 font-mono text-xs"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Use: [Employee Name], [Employee ID], [Department], [Designation], [Location], [Asset Table], [Admin Name], [Date]
+          Use: [Team Member Name], [Team Member ID], [Department], [Designation], [Location], [Asset Table], [Admin Name], [Date]
         </p>
       </div>
       {isAdmin && (

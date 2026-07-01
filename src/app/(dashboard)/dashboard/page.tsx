@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <StatsCard title="Available" value={stats.availableAssets} icon={PackageOpen} color="green" />
         <StatsCard title="Damaged" value={stats.damagedAssets} icon={AlertTriangle} color="amber" />
         <StatsCard title="Lost" value={stats.lostAssets} icon={PackageX} color="red" />
-        <StatsCard title="Employees" value={stats.totalEmployees} icon={Users} color="purple" />
+        <StatsCard title="Team Members" value={stats.totalEmployees} icon={Users} color="purple" />
         <StatsCard title="Pending Forms" value={stats.pendingForms} icon={FileClock} color="yellow" />
         <StatsCard title="Completed Forms" value={stats.completedForms} icon={FileCheck} color="green" />
       </div>

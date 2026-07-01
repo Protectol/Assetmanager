@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Employee Asset Management",
+  title: "Team Member Asset Management",
   description: "Internal asset management system for IT and HR",
 };
 

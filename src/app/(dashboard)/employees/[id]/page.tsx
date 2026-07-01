@@ -176,11 +176,11 @@ export default async function EmployeeDetailPage({
       {activeTab === "info" && (
         <Card>
           <CardHeader>
-            <CardTitle>Employee Information</CardTitle>
+            <CardTitle>Team Member Information</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-6 sm:grid-cols-2">
-              <InfoItem icon={User} label="Employee ID" value={employeeData.employee_id} />
+              <InfoItem icon={User} label="Team Member ID" value={employeeData.employee_id} />
               <InfoItem icon={Building2} label="Department" value={employeeData.department} />
               <InfoItem icon={Briefcase} label="Designation" value={employeeData.designation} />
               <InfoItem icon={MapPin} label="Location" value={employeeData.location} />

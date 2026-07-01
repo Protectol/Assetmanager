@@ -44,8 +44,8 @@ export async function GET(
 
   switch (type as ReportType) {
     case "employee-assets": {
-      title = "Employee Asset Register";
-      headers = ["Employee", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
+      title = "Team Member Asset Register";
+      headers = ["Team Member", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
       const { data } = await supabase
         .from("asset_assignments")
         .select(`
@@ -85,7 +85,7 @@ export async function GET(
     case "laptops-chargers": {
       const isLaptopsOnly = type === "laptops";
       title = isLaptopsOnly ? "Laptops Assigned Report" : "Laptops and Chargers Assigned Report";
-      headers = ["Employee", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
+      headers = ["Team Member", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
       const { data } = await supabase
         .from("asset_assignments")
         .select(`
@@ -127,7 +127,7 @@ export async function GET(
 
     case "asset-history": {
       title = "Asset History Report";
-      headers = ["Date", "Action", "Employee", "Asset", "Tag", "Remarks"];
+      headers = ["Date", "Action", "Team Member", "Asset", "Tag", "Remarks"];
       const { data } = await supabase
         .from("asset_history")
         .select(`
@@ -155,7 +155,7 @@ export async function GET(
 
     case "verification": {
       title = "Verification Corrections Report";
-      headers = ["Date", "Employee Reported", "Condition", "Remarks", "Asset", "Tag", "Approved", "Applied"];
+      headers = ["Date", "Team Member Reported", "Condition", "Remarks", "Asset", "Tag", "Approved", "Applied"];
       const { data } = await supabase
         .from("verification_corrections")
         .select(`
@@ -183,7 +183,7 @@ export async function GET(
 
     case "pending-forms": {
       title = "Pending Forms Report";
-      headers = ["Employee", "ID", "Action", "Status", "Created", "Expires"];
+      headers = ["Team Member", "ID", "Action", "Status", "Created", "Expires"];
       const { data } = await supabase
         .from("forms")
         .select(`
@@ -209,7 +209,7 @@ export async function GET(
 
     case "returns": {
       title = "Asset Returns Report";
-      headers = ["Date", "Employee", "Asset", "Tag", "Condition", "Remarks"];
+      headers = ["Date", "Team Member", "Asset", "Tag", "Condition", "Remarks"];
       const { data } = await supabase
         .from("asset_history")
         .select(`

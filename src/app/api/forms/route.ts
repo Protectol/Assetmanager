@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     .single();
 
   if (!employee) {
-    return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    return NextResponse.json({ error: "Team Member not found" }, { status: 404 });
   }
 
   try {

@@ -33,7 +33,7 @@ export default async function EditEmployeePage({ params }: EditEmployeePageProps
           </Link>
         </Button>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Edit Employee</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Edit Team Member</h2>
           <p className="text-muted-foreground">
             Update details for {(employee as Employee).employee_name}
           </p>

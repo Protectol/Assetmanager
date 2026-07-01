@@ -237,7 +237,7 @@ export async function processVerificationSubmission(
       employee_id: form.employee_id,
       action: "verification",
       performed_by: null,
-      remarks: "Employee asset verification completed",
+      remarks: "Team Member asset verification completed",
       metadata: { form_id: formId },
     });
   }

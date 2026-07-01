@@ -110,8 +110,8 @@ export function EmployeeTable({ employees, departments }: EmployeeTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employee Name</TableHead>
-                <TableHead>Employee ID</TableHead>
+                <TableHead>Team Member Name</TableHead>
+                <TableHead>Team Member ID</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Designation</TableHead>
                 <TableHead>Location</TableHead>

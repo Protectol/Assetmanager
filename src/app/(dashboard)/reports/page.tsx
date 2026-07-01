@@ -81,14 +81,14 @@ export default async function ReportsPage() {
     { label: "Laptop Without Charger", value: laptopNoCharger.length, icon: Laptop, color: "text-orange-500 bg-orange-50 dark:bg-orange-950/30" },
     { label: "Damaged Assets Reported", value: damagedAssets.length, icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:bg-red-950/30" },
     { label: "Missing Serial Numbers", value: missingSerials.length, icon: XCircle, color: "text-purple-500 bg-purple-50 dark:bg-purple-950/30" },
-    { label: "Total Active Employees", value: allEmployeeIds.size, icon: Users, color: "text-slate-500 bg-slate-100 dark:bg-slate-800" },
+    { label: "Total Active Team Members", value: allEmployeeIds.size, icon: Users, color: "text-slate-500 bg-slate-100 dark:bg-slate-800" },
   ];
 
   const FormTable = ({ forms, showSubmitted = false }: { forms: CvForm[]; showSubmitted?: boolean }) => (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Employee</TableHead>
+          <TableHead>Team Member</TableHead>
           {showSubmitted && <TableHead>Submitted</TableHead>}
           {!showSubmitted && <TableHead>Created</TableHead>}
           {!showSubmitted && <TableHead>Expires</TableHead>}
@@ -122,7 +122,7 @@ export default async function ReportsPage() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Employee</TableHead>
+          <TableHead>Team Member</TableHead>
           <TableHead>Department</TableHead>
           <TableHead className="w-10" />
         </TableRow>
@@ -260,7 +260,7 @@ export default async function ReportsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Employee</TableHead>
+                  <TableHead>Team Member</TableHead>
                   <TableHead>ID</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Designation</TableHead>
@@ -318,7 +318,7 @@ export default async function ReportsPage() {
               <Laptop className="h-5 w-5" />
               Laptop Without Charger ({laptopNoCharger.length})
             </CardTitle>
-            <CardDescription>Employees who declared a laptop but no charger — requires follow-up</CardDescription>
+            <CardDescription>Team Members who declared a laptop but no charger — requires follow-up</CardDescription>
           </CardHeader>
           <CardContent><EmployeeDeptTable forms={laptopNoCharger} /></CardContent>
         </Card>
