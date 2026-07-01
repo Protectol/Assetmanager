@@ -148,8 +148,70 @@ export default async function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Current Asset Verification Reports</h2>
-          <p className="text-muted-foreground">Track verification status, compliance, and asset declaration quality</p>
+          <h2 className="text-2xl font-bold tracking-tight">Reports & Analytics</h2>
+          <p className="text-muted-foreground">Download asset reports, track verification status, and monitor compliance</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Export System Reports</CardTitle>
+          <CardDescription>Download asset registers and history logs in Excel or PDF formats</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">All Assigned Assets</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/employee-assets" target="_blank" rel="noopener noreferrer"><FileText className="mr-2 h-4 w-4" /> PDF</a>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/employee-assets?format=excel" target="_blank" rel="noopener noreferrer"><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</a>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Laptops Only</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/laptops" target="_blank" rel="noopener noreferrer"><FileText className="mr-2 h-4 w-4" /> PDF</a>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/laptops?format=excel" target="_blank" rel="noopener noreferrer"><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</a>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Laptops & Chargers</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/laptops-chargers" target="_blank" rel="noopener noreferrer"><FileText className="mr-2 h-4 w-4" /> PDF</a>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/laptops-chargers?format=excel" target="_blank" rel="noopener noreferrer"><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</a>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Asset History</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/asset-history" target="_blank" rel="noopener noreferrer"><FileText className="mr-2 h-4 w-4" /> PDF</a>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="flex-1">
+                  <a href="/api/reports/asset-history?format=excel" target="_blank" rel="noopener noreferrer"><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
+        <div>
+          <h3 className="text-xl font-bold tracking-tight">Current Asset Verification</h3>
+          <p className="text-sm text-muted-foreground">Monitor the progress and issues of the ongoing verification campaign</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>

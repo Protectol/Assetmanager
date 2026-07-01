@@ -11,6 +11,8 @@ const VALID_TYPES = [
   "verification",
   "pending-forms",
   "returns",
+  "laptops",
+  "laptops-chargers"
 ] as const;
 
 type ReportType = (typeof VALID_TYPES)[number];
@@ -64,6 +66,50 @@ export async function GET(
           condition: string;
           status: string;
         } | null;
+        return [
+          emp?.employee_name || "—",
+          emp?.employee_id || "—",
+          emp?.department || "—",
+          asset?.asset_name || "—",
+          asset?.asset_type || "—",
+          asset?.asset_tag || "—",
+          asset?.serial_number || "—",
+          asset?.condition ? capitalize(asset.condition) : "—",
+          asset?.status ? capitalize(asset.status) : "—",
+        ];
+      });
+      break;
+    }
+
+    case "laptops":
+    case "laptops-chargers": {
+      const isLaptopsOnly = type === "laptops";
+      title = isLaptopsOnly ? "Laptops Assigned Report" : "Laptops and Chargers Assigned Report";
+      headers = ["Employee", "ID", "Department", "Asset", "Type", "Tag", "Serial", "Condition", "Status"];
+      const { data } = await supabase
+        .from("asset_assignments")
+        .select(`
+          assigned_date,
+          employee:employees(employee_name, employee_id, department),
+          asset:assets(asset_name, asset_type, asset_tag, serial_number, condition, status)
+        `)
+        .eq("is_active", true)
+        .order("assigned_date", { ascending: false });
+
+      const filteredData = (data || []).filter((row) => {
+        const asset = row.asset as any;
+        if (!asset || !asset.asset_type) return false;
+        const typeStr = asset.asset_type.toLowerCase();
+        if (isLaptopsOnly) {
+          return typeStr === "laptop";
+        } else {
+          return typeStr === "laptop" || typeStr.includes("charger") || typeStr.includes("adapter");
+        }
+      });
+
+      rows = filteredData.map((row) => {
+        const emp = row.employee as any;
+        const asset = row.asset as any;
         return [
           emp?.employee_name || "—",
           emp?.employee_id || "—",
