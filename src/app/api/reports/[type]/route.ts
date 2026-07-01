@@ -97,7 +97,7 @@ export async function GET(
         .order("assigned_date", { ascending: false });
 
       const filteredData = (data || []).filter((row) => {
-        const asset = row.asset as any;
+        const asset = row.asset as unknown as { asset_type?: string } | null;
         if (!asset || !asset.asset_type) return false;
         const typeStr = asset.asset_type.toLowerCase();
         if (isLaptopsOnly) {
@@ -108,8 +108,15 @@ export async function GET(
       });
 
       rows = filteredData.map((row) => {
-        const emp = row.employee as any;
-        const asset = row.asset as any;
+        const emp = row.employee as unknown as { employee_name: string; employee_id: string; department: string } | null;
+        const asset = row.asset as unknown as {
+          asset_name: string;
+          asset_type: string;
+          asset_tag: string;
+          serial_number?: string;
+          condition: string;
+          status: string;
+        } | null;
         return [
           emp?.employee_name || "—",
           emp?.employee_id || "—",
