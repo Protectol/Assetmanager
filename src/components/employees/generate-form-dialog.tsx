@@ -17,12 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/shared/status-badge";
 import type { Asset, FormActionType } from "@/types";
-import { capitalize } from "@/lib/utils";
 
 const ACTION_LABELS: Record<FormActionType, string> = {
   onboarding: "Onboarding",
   exchange: "Exchange",
-  return: "Return",
+  return: "Unassign",
   verification: "Verification",
   current_verification: "Current Asset Verification",
 };
@@ -182,7 +181,7 @@ export function GenerateFormDialog({
                       : actionType === "exchange"
                         ? "Select new assets"
                         : actionType === "return"
-                          ? "Select assets to return"
+                          ? "Select assets to unassign"
                           : "Assets to verify"}
                   </Label>
 
@@ -303,7 +302,7 @@ export function EmployeeActionButtons({
       <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <Button key={action} variant="outline" size="sm" onClick={() => openDialog(action)}>
-            {capitalize(action)}
+            {ACTION_LABELS[action]}
           </Button>
         ))}
       </div>

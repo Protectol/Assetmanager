@@ -36,6 +36,16 @@ export async function createAsset(data: AssetFormData) {
   const user = await requireAssetManager();
   const supabase = await createClient();
 
+  const { data: existingTag } = await supabase
+    .from("assets")
+    .select("id")
+    .eq("asset_tag", data.asset_tag.trim())
+    .maybeSingle();
+
+  if (existingTag) {
+    throw new Error(`Asset tag "${data.asset_tag.trim()}" is already in use.`);
+  }
+
   const { data: asset, error } = await supabase
     .from("assets")
     .insert({
@@ -79,6 +89,18 @@ export async function updateAsset(id: string, data: AssetFormData) {
     .single();
 
   if (fetchError || !existing) throw new Error("Asset not found");
+
+  if (existing.asset_tag !== data.asset_tag.trim()) {
+    const { data: existingTag } = await supabase
+      .from("assets")
+      .select("id")
+      .eq("asset_tag", data.asset_tag.trim())
+      .maybeSingle();
+
+    if (existingTag) {
+      throw new Error(`Asset tag "${data.asset_tag.trim()}" is already in use.`);
+    }
+  }
 
   const { error } = await supabase
     .from("assets")

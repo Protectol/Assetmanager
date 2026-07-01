@@ -60,6 +60,7 @@ export default async function EmployeeDetailPage({
     { data: availableAssets },
     { data: history },
     { data: forms },
+    { data: pendingFormAssets },
   ] = await Promise.all([
     supabase.from("employees").select("*").eq("id", id).single(),
     supabase
@@ -90,15 +91,27 @@ export default async function EmployeeDetailPage({
       `)
       .eq("employee_id", id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("form_assets")
+      .select("asset_id, old_asset_id, forms!inner(status)")
+      .eq("forms.status", "pending"),
   ]);
 
   if (employeeError || !employee) {
     notFound();
   }
 
+  const pendingAssetIds = new Set<string>();
+  if (pendingFormAssets) {
+    pendingFormAssets.forEach((fa) => {
+      if (fa.asset_id) pendingAssetIds.add(fa.asset_id);
+      if (fa.old_asset_id) pendingAssetIds.add(fa.old_asset_id);
+    });
+  }
+
   const employeeData = employee as Employee;
-  const assignedAssets = (currentAssets || []) as Asset[];
-  const freeAssets = (availableAssets || []) as Asset[];
+  const assignedAssets = ((currentAssets || []) as Asset[]).filter(a => !pendingAssetIds.has(a.id));
+  const freeAssets = ((availableAssets || []) as Asset[]).filter(a => !pendingAssetIds.has(a.id));
   const historyItems = (history || []) as AssetHistory[];
   const formItems = (forms || []) as Form[];
 

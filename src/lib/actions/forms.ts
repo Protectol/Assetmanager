@@ -183,7 +183,7 @@ export async function processReturnSubmission(
     await supabase
       .from("assets")
       .update({
-        status: "returned",
+        status: "available",
         current_holder_id: null,
         condition: fa.condition || fa.asset?.condition,
       })

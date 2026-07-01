@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireApiAuth, isErrorResponse } from "@/lib/api-auth";
 import { generateReportPDF } from "@/lib/pdf";
 import { capitalize, formatDate, formatDateTime } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
 const VALID_TYPES = [
   "employee-assets",
@@ -189,8 +190,28 @@ export async function GET(
     }
   }
 
+  const format = _request.nextUrl.searchParams.get("format");
+  const isExcel = format === "excel" || format === "xlsx";
+  const dateStr = formatDate(new Date()).replace(/,/g, "").replace(/ /g, "-");
+
+  if (isExcel) {
+    const workbook = XLSX.utils.book_new();
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+    const filename = `${type}-report-${dateStr}.xlsx`;
+    return new NextResponse(excelBuffer, {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  }
+
   const pdfBytes = generateReportPDF(title, headers, rows, companyName);
-  const filename = `${type}-report-${formatDate(new Date()).replace(/,/g, "").replace(/ /g, "-")}.pdf`;
+  const filename = `${type}-report-${dateStr}.pdf`;
 
   return new NextResponse(Buffer.from(pdfBytes), {
     headers: {

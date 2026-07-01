@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { formatDateTime } from "@/lib/utils";
-import { AlertTriangle, CheckCircle2, Clock, Users, Laptop, XCircle, AlertCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Users, Laptop, XCircle, AlertCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -146,9 +146,23 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Current Asset Verification Reports</h2>
-        <p className="text-muted-foreground">Track verification status, compliance, and asset declaration quality</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Current Asset Verification Reports</h2>
+          <p className="text-muted-foreground">Track verification status, compliance, and asset declaration quality</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <a href="/api/reports/verification" target="_blank" rel="noopener noreferrer">
+              <FileText className="mr-2 h-4 w-4" /> Download PDF
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a href="/api/reports/verification?format=excel" target="_blank" rel="noopener noreferrer">
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Download Excel
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

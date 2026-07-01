@@ -108,17 +108,17 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
       day: "2-digit", month: "long", year: "numeric"
     });
 
-    // Build asset table rows for email body
-    const assetTableRows = declaredAssets
+    // Build asset details for email body (structured list to avoid alignment issues in proportional fonts)
+    const assetTable = declaredAssets
       .filter(a => a.has_asset)
-      .map(a => {
-        const sn = a.fields?.serial_number || a.fields?.imei || a.fields?.sim_number || "—";
-        return `${a.category} | ${buildAssetName(a)} | ${sn} | ${capitalize(a.condition || "good")} | ${a.remarks || "—"}`;
+      .map((a, i) => {
+        const sn = a.fields?.serial_number || a.fields?.imei || a.fields?.sim_number || "None";
+        return `${i + 1}. ${a.category}: ${buildAssetName(a)}
+   • Serial/ID: ${sn}
+   • Condition: ${capitalize(a.condition || "good")}
+   • Remarks: ${a.remarks || "None"}`;
       })
-      .join("\n");
-
-    const assetTableHeader = "Asset Category | Asset Name | Serial Number / ID | Condition | Remarks";
-    const assetTable = `${assetTableHeader}\n${assetTableRows}`;
+      .join("\n\n");
 
     const replacements: Record<string, string> = {
       "[Employee Name]": emp.employee_name,

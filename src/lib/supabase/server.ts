@@ -3,10 +3,10 @@ import { cookies } from "next/headers";
 import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/env";
 
 export async function createClient() {
+  const cookieStore = await cookies();
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured. Add credentials to .env.local");
   }
-  const cookieStore = await cookies();
   const { url, key } = getSupabaseEnv();
 
   return createServerClient(
