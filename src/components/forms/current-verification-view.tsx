@@ -13,9 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Trash2, AlertCircle, ShieldCheck, ShieldX } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import type { AssetCondition } from "@/types";
+
+// Grammatically correct question per category
+const CATEGORY_QUESTIONS: Record<string, string> = {
+  Laptop: "Do you have a company-issued laptop?",
+  "Laptop Charger": "Do you have a company-issued laptop charger / adapter?",
+  Mouse: "Do you have a company-issued mouse?",
+  Keyboard: "Do you have a company-issued keyboard?",
+  Monitor: "Do you have a company-issued monitor?",
+  Tablet: "Do you have a company-issued tablet?",
+  "Mobile Phone": "Do you have a company-issued mobile phone?",
+  "SIM Card": "Do you have a company-issued SIM card?",
+  "Access Card": "Do you have a company-issued access card?",
+};
 
 // Standard fields requested by user per category
 const CATEGORY_TEMPLATES: Record<string, { name: string; label: string; required: boolean }[]> = {
@@ -78,6 +91,8 @@ export interface DeclaredAsset {
   condition: AssetCondition | "";
   remarks: string;
   isCustom?: boolean;
+  k7_installed?: boolean | null; // null = not answered, true = yes, false = no
+  k7_reason?: string;
 }
 
 interface CurrentVerificationViewProps {
@@ -139,6 +154,15 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
         
         if (!asset.condition && asset.category !== "SIM Card") {
            errors.push(`Please select a condition for ${asset.category}`);
+        }
+
+        // K7 validation for Laptop
+        if (asset.category === "Laptop") {
+          if (asset.k7_installed === null || asset.k7_installed === undefined) {
+            errors.push(`Please indicate whether K7 Security Software is installed on the Laptop.`);
+          } else if (asset.k7_installed === false && !asset.k7_reason?.trim()) {
+            errors.push(`Please provide a reason why K7 Security Software is not installed on the Laptop.`);
+          }
         }
       }
     });
@@ -213,7 +237,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                       className="h-5 w-5"
                     />
                     <Label htmlFor={`has-${asset.id}`} className="text-base font-semibold leading-none cursor-pointer">
-                      Do you have a company {asset.category}?
+                      {CATEGORY_QUESTIONS[asset.category] ?? `Do you have a company-issued ${asset.category}?`}
                     </Label>
                   </div>
                 ) : (
@@ -251,6 +275,62 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                         </div>
                       ))}
                     </div>
+
+                    {/* K7 Security Software — Laptop only */}
+                    {asset.category === "Laptop" && (
+                      <div className="rounded-xl border border-violet-200 dark:border-violet-800/60 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShieldCheck className="h-4 w-4 text-violet-600 dark:text-violet-400 shrink-0" />
+                          <Label className="text-sm font-bold text-violet-800 dark:text-violet-300">
+                            K7 Security Software <span className="text-destructive">*</span>
+                          </Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground -mt-1">Is K7 Total Security / K7 Antivirus installed on this laptop?</p>
+                        <div className="flex gap-4">
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => updateAsset(asset.id, { k7_installed: true, k7_reason: "" })}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
+                              ${asset.k7_installed === true
+                                ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
+                                : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"}
+                            `}
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                            Yes, Installed
+                          </button>
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => updateAsset(asset.id, { k7_installed: false })}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
+                              ${asset.k7_installed === false
+                                ? "border-destructive bg-destructive text-white shadow-sm"
+                                : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:border-destructive/60 hover:text-destructive"}
+                            `}
+                          >
+                            <ShieldX className="h-4 w-4" />
+                            No, Not Installed
+                          </button>
+                        </div>
+                        {asset.k7_installed === false && (
+                          <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <Label className="text-xs font-bold text-destructive">
+                              Reason why K7 is not installed <span className="text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              placeholder="Please explain why K7 Security Software is not installed..."
+                              value={asset.k7_reason || ""}
+                              onChange={(e) => updateAsset(asset.id, { k7_reason: e.target.value })}
+                              disabled={disabled}
+                              rows={2}
+                              className="min-h-[60px] bg-white dark:bg-zinc-900 border-destructive/40 focus:border-destructive resize-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {asset.category !== "SIM Card" && (
                       <div className="grid gap-4 sm:grid-cols-3">

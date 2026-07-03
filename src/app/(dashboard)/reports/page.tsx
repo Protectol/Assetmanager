@@ -8,7 +8,7 @@ import { formatDateTime } from "@/lib/utils";
 import {
   AlertTriangle, CheckCircle2, Clock, Users, Laptop, XCircle,
   AlertCircle, FileSpreadsheet, FileText, Database, History,
-  BarChart3, Download,
+  BarChart3, Download, Shield, ShieldOff,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,16 @@ const REPORTS = [
     border: "border-teal-200 dark:border-teal-900/50",
     badge: "Verification",
   },
+  {
+    key: "k7-security",
+    title: "K7 Security Software",
+    description: "Report of all laptop users who declared K7 antivirus status — shows who has it installed and who doesn't with their given reason.",
+    icon: Shield,
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    border: "border-violet-200 dark:border-violet-900/50",
+    badge: "K7 Status",
+  },
 ];
 
 export default async function ReportsPage() {
@@ -119,6 +129,8 @@ export default async function ReportsPage() {
   const laptopNoCharger: CvForm[] = [];
   const damagedAssets: CvForm[] = [];
   const missingSerials: CvForm[] = [];
+  const k7Installed: Array<{ form: CvForm; serial: string; laptop: string }> = [];
+  const k7NotInstalled: Array<{ form: CvForm; serial: string; laptop: string; reason: string }> = [];
 
   for (const form of cvForms) {
     const declared = getDeclared(form);
@@ -128,6 +140,19 @@ export default async function ReportsPage() {
     if (declared.some((a) => a.has_asset && a.condition === "damaged")) damagedAssets.push(form);
     if (declared.some((a) => a.has_asset && !["SIM Card", "Access Card"].includes(a.category) && !a.fields?.serial_number && !a.fields?.imei))
       missingSerials.push(form);
+
+    // K7 tracking
+    const laptopAsset = declared.find((a) => a.category === "Laptop" && a.has_asset);
+    if (laptopAsset) {
+      const serial = laptopAsset.fields?.serial_number || "—";
+      const laptopName = [laptopAsset.fields?.brand, laptopAsset.fields?.model].filter(Boolean).join(" ") || "Laptop";
+      const k7 = (laptopAsset as unknown as { k7_installed?: boolean; k7_reason?: string });
+      if (k7.k7_installed === true) {
+        k7Installed.push({ form, serial, laptop: laptopName });
+      } else if (k7.k7_installed === false) {
+        k7NotInstalled.push({ form, serial, laptop: laptopName, reason: k7.k7_reason || "—" });
+      }
+    }
   }
 
   const verificationStats = [
@@ -138,6 +163,8 @@ export default async function ReportsPage() {
     { label: "Laptop No Charger", value: laptopNoCharger.length, icon: Laptop, color: "text-orange-500 bg-orange-50 dark:bg-orange-950/30" },
     { label: "Damaged Assets", value: damagedAssets.length, icon: AlertTriangle, color: "text-red-500 bg-red-50 dark:bg-red-950/30" },
     { label: "Missing Serials", value: missingSerials.length, icon: XCircle, color: "text-purple-500 bg-purple-50 dark:bg-purple-950/30" },
+    { label: "K7 Installed", value: k7Installed.length, icon: Shield, color: "text-violet-500 bg-violet-50 dark:bg-violet-950/30" },
+    { label: "K7 Not Installed", value: k7NotInstalled.length, icon: ShieldOff, color: "text-rose-500 bg-rose-50 dark:bg-rose-950/30" },
     { label: "Total Team Members", value: allEmployeeIds.size, icon: Users, color: "text-slate-500 bg-slate-100 dark:bg-slate-800" },
   ];
 
@@ -371,7 +398,7 @@ export default async function ReportsPage() {
         )}
 
         {missingSerials.length > 0 && (
-          <Card className="border-purple-200 dark:border-purple-900/40">
+          <Card className="border-purple-200 dark:border-purple-900/40 mb-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base text-purple-600 dark:text-purple-400">
                 <XCircle className="h-5 w-5" />
@@ -380,6 +407,104 @@ export default async function ReportsPage() {
               <CardDescription>Forms where trackable assets were submitted without a serial number</CardDescription>
             </CardHeader>
             <CardContent><EmployeeDeptTable forms={missingSerials} /></CardContent>
+          </Card>
+        )}
+
+        {/* ── K7 Security Software Report ── */}
+        <div className="flex items-center gap-2 mb-4 mt-8">
+          <Shield className="h-5 w-5 text-violet-500" />
+          <h3 className="text-lg font-semibold">K7 Security Software Status</h3>
+        </div>
+
+        <Card className="border-violet-200 dark:border-violet-900/40 mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base text-violet-600 dark:text-violet-400">
+              <Shield className="h-5 w-5" />
+              Laptops with K7 Installed ({k7Installed.length})
+            </CardTitle>
+            <CardDescription>Team members who confirmed K7 Security Software is installed on their laptop</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {k7Installed.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No laptop users have confirmed K7 installation yet</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Team Member</TableHead>
+                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Laptop</TableHead>
+                    <TableHead>Serial Number</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {k7Installed.map(({ form, serial, laptop }) => (
+                    <TableRow key={form.id}>
+                      <TableCell>
+                        <p className="font-medium">{form.employee.employee_name}</p>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{form.employee.employee_id}</TableCell>
+                      <TableCell className="text-sm">{form.employee.department}</TableCell>
+                      <TableCell className="text-sm">{laptop}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">{serial}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" asChild><Link href={`/forms/${form.id}`}>View</Link></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {k7NotInstalled.length > 0 && (
+          <Card className="border-rose-200 dark:border-rose-900/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-rose-600 dark:text-rose-400">
+                <ShieldOff className="h-5 w-5" />
+                Laptops WITHOUT K7 Installed ({k7NotInstalled.length})
+              </CardTitle>
+              <CardDescription>These team members declared their laptop does not have K7 Security Software installed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Team Member</TableHead>
+                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Laptop</TableHead>
+                    <TableHead>Serial Number</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {k7NotInstalled.map(({ form, serial, laptop, reason }) => (
+                    <TableRow key={form.id}>
+                      <TableCell>
+                        <p className="font-medium">{form.employee.employee_name}</p>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{form.employee.employee_id}</TableCell>
+                      <TableCell className="text-sm">{form.employee.department}</TableCell>
+                      <TableCell className="text-sm">{laptop}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-xs">{serial}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate" title={reason}>{reason}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" asChild><Link href={`/forms/${form.id}`}>View</Link></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
         )}
       </div>

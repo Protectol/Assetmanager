@@ -12,7 +12,8 @@ const VALID_TYPES = [
   "pending-forms",
   "returns",
   "laptops",
-  "laptops-chargers"
+  "laptops-chargers",
+  "k7-security"
 ] as const;
 
 type ReportType = (typeof VALID_TYPES)[number];
@@ -239,6 +240,49 @@ export async function GET(
           row.remarks || "—",
         ];
       });
+      break;
+    }
+
+    case "k7-security": {
+      title = "K7 Security Software Status Report";
+      headers = ["Team Member", "Employee ID", "Department", "Laptop", "Serial Number", "K7 Installed", "Reason (if Not Installed)", "Submitted At"];
+      const { data: k7Forms } = await supabase
+        .from("forms")
+        .select(`
+          id, status,
+          employee:employees(employee_name, employee_id, department),
+          submission:form_submissions(submitted_at, submission_data)
+        `)
+        .eq("action_type", "current_verification")
+        .in("status", ["completed", "approved"])
+        .order("created_at", { ascending: false });
+
+      for (const form of (k7Forms || [])) {
+        const emp = form.employee as unknown as { employee_name: string; employee_id: string; department: string } | null;
+        const sub = (form.submission as unknown as Array<{ submitted_at?: string; submission_data?: { declared_assets?: Array<{
+          category: string; has_asset: boolean; fields?: Record<string, string>;
+          k7_installed?: boolean; k7_reason?: string;
+        }> } }>)?.[0];
+        const declared = sub?.submission_data?.declared_assets || [];
+        const laptopAsset = declared.find((a) => a.category === "Laptop" && a.has_asset);
+        if (!laptopAsset) continue;
+
+        const serial = laptopAsset.fields?.serial_number || "—";
+        const laptopName = [laptopAsset.fields?.brand, laptopAsset.fields?.model].filter(Boolean).join(" ") || "Laptop";
+        const k7Status = laptopAsset.k7_installed === true ? "Yes" : laptopAsset.k7_installed === false ? "No" : "Not Answered";
+        const k7Reason = laptopAsset.k7_installed === false ? (laptopAsset.k7_reason || "—") : "—";
+
+        rows.push([
+          emp?.employee_name || "—",
+          emp?.employee_id || "—",
+          emp?.department || "—",
+          laptopName,
+          serial,
+          k7Status,
+          k7Reason,
+          sub?.submitted_at ? formatDateTime(sub.submitted_at) : "—",
+        ]);
+      }
       break;
     }
   }
