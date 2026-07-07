@@ -228,21 +228,21 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
               <div key={asset.id} className={`rounded-xl border transition-colors ${asset.has_asset ? 'border-primary/50 bg-primary/5 dark:bg-primary/10' : 'border-border/60 bg-slate-50/50 dark:bg-zinc-800/30'} p-4 sm:p-5 space-y-4 shadow-sm`}>
                 
                 {isStandard ? (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-start gap-3">
                     <Checkbox
                       id={`has-${asset.id}`}
                       checked={asset.has_asset}
                       onCheckedChange={(c) => updateAsset(asset.id, { has_asset: !!c })}
                       disabled={disabled}
-                      className="h-5 w-5"
+                      className="h-5 w-5 mt-0.5 shrink-0"
                     />
-                    <Label htmlFor={`has-${asset.id}`} className="text-base font-semibold leading-none cursor-pointer">
+                    <Label htmlFor={`has-${asset.id}`} className="text-sm sm:text-base font-semibold leading-snug cursor-pointer">
                       {CATEGORY_QUESTIONS[asset.category] ?? `Do you have a company-issued ${asset.category}?`}
                     </Label>
                   </div>
                 ) : (
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 mr-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
                       <Label className="text-xs font-bold text-muted-foreground mb-1 block">Asset Category</Label>
                       <Input
                         placeholder="e.g. Headset, External Drive"
@@ -252,7 +252,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                         className="bg-white dark:bg-zinc-900 border-border/60"
                       />
                     </div>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeCustomAsset(asset.id)} disabled={disabled}>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0 mt-5" onClick={() => removeCustomAsset(asset.id)} disabled={disabled}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -260,7 +260,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
 
                 {asset.has_asset && (
                   <div className="pt-4 border-t border-border/40 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {template.map((field) => (
                         <div key={field.name} className="space-y-1.5">
                           <Label className="text-xs font-bold text-muted-foreground">
@@ -270,7 +270,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             value={asset.fields[field.name] || ""}
                             onChange={(e) => updateField(asset.id, field.name, e.target.value)}
                             disabled={disabled}
-                            className="bg-white dark:bg-zinc-900 border-border/60"
+                            className="bg-white dark:bg-zinc-900 border-border/60 h-10"
                           />
                         </div>
                       ))}
@@ -279,38 +279,38 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                     {/* K7 Security Software — Laptop only */}
                     {asset.category === "Laptop" && (
                       <div className="rounded-xl border border-violet-200 dark:border-violet-800/60 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2">
                           <ShieldCheck className="h-4 w-4 text-violet-600 dark:text-violet-400 shrink-0" />
                           <Label className="text-sm font-bold text-violet-800 dark:text-violet-300">
                             K7 Security Software <span className="text-destructive">*</span>
                           </Label>
                         </div>
-                        <p className="text-xs text-muted-foreground -mt-1">Is K7 Total Security / K7 Antivirus installed on this laptop?</p>
-                        <div className="flex gap-4">
+                        <p className="text-xs text-muted-foreground">Is K7 Total Security / K7 Antivirus installed on this laptop?</p>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                           <button
                             type="button"
                             disabled={disabled}
                             onClick={() => updateAsset(asset.id, { k7_installed: true, k7_reason: "" })}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
+                            className={`flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
                               ${asset.k7_installed === true
                                 ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
                                 : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"}
                             `}
                           >
-                            <ShieldCheck className="h-4 w-4" />
+                            <ShieldCheck className="h-4 w-4 shrink-0" />
                             Yes, Installed
                           </button>
                           <button
                             type="button"
                             disabled={disabled}
                             onClick={() => updateAsset(asset.id, { k7_installed: false })}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
+                            className={`flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg border-2 text-sm font-semibold transition-all focus:outline-none
                               ${asset.k7_installed === false
                                 ? "border-destructive bg-destructive text-white shadow-sm"
                                 : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:border-destructive/60 hover:text-destructive"}
                             `}
                           >
-                            <ShieldX className="h-4 w-4" />
+                            <ShieldX className="h-4 w-4 shrink-0" />
                             No, Not Installed
                           </button>
                         </div>
@@ -324,8 +324,8 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                               value={asset.k7_reason || ""}
                               onChange={(e) => updateAsset(asset.id, { k7_reason: e.target.value })}
                               disabled={disabled}
-                              rows={2}
-                              className="min-h-[60px] bg-white dark:bg-zinc-900 border-destructive/40 focus:border-destructive resize-none"
+                              rows={3}
+                              className="min-h-[72px] bg-white dark:bg-zinc-900 border-destructive/40 focus:border-destructive resize-none"
                             />
                           </div>
                         )}
@@ -333,7 +333,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                     )}
 
                     {asset.category !== "SIM Card" && (
-                      <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div className="sm:col-span-1">
                           <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">Condition <span className="text-destructive">*</span></Label>
                           <Select
@@ -341,7 +341,7 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             onValueChange={(v) => updateAsset(asset.id, { condition: v as AssetCondition })}
                             disabled={disabled}
                           >
-                          <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/60">
+                            <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/60 h-10">
                               <SelectValue placeholder="Select condition" />
                             </SelectTrigger>
                             <SelectContent>
@@ -358,8 +358,8 @@ export function CurrentVerificationView({ categories, rules, onDataChange, disab
                             value={asset.remarks}
                             onChange={(e) => updateAsset(asset.id, { remarks: e.target.value })}
                             disabled={disabled}
-                            rows={1}
-                            className="min-h-[38px] bg-white dark:bg-zinc-900 border-border/60 resize-none"
+                            rows={2}
+                            className="min-h-[42px] bg-white dark:bg-zinc-900 border-border/60 resize-none"
                           />
                         </div>
                       </div>

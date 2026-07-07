@@ -246,7 +246,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
           <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
             Team Member Information
           </h3>
-          <div className="grid gap-x-4 gap-y-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-x-4 gap-y-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Name", form.employee.employee_name],
               ["Team Member ID", form.employee.employee_id],
@@ -257,7 +257,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
             ].map(([label, value]) => (
               <div key={label} className="space-y-1 bg-slate-50/50 dark:bg-zinc-800/30 p-2.5 rounded-lg border border-border/40">
                 <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">{label}</p>
-                <p className="text-sm font-semibold text-foreground tracking-tight break-words">{value || "—"}</p>
+                <p className="text-sm font-semibold text-foreground tracking-tight break-all">{value || "—"}</p>
               </div>
             ))}
           </div>
@@ -355,21 +355,21 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
                 {/* Status validation fields */}
                 <div className="pt-4 border-t border-border/40 space-y-4">
                   {isVerification && (
-                    <div className="flex items-center space-x-2.5 bg-muted/40 p-3 rounded-lg border border-border/40">
+                    <div className="flex items-start gap-2.5 bg-muted/40 p-3 rounded-lg border border-border/40">
                       <Checkbox
                         id={`verified-${fa.id}`}
                         checked={assetData[fa.id]?.verified ?? true}
                         onCheckedChange={(checked) => updateAsset(fa.id, "verified", !!checked)}
                         disabled={isDisabled}
-                        className="h-4 w-4 rounded border-input"
+                        className="h-4 w-4 mt-0.5 shrink-0 rounded border-input"
                       />
-                      <Label htmlFor={`verified-${fa.id}`} className="text-sm font-semibold leading-none cursor-pointer select-none">
+                      <Label htmlFor={`verified-${fa.id}`} className="text-sm font-semibold leading-snug cursor-pointer select-none">
                         I confirm this asset is in my possession and details are correct
                       </Label>
                     </div>
                   )}
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div className="sm:col-span-1">
                       <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">Reported Condition</Label>
                       <Select
@@ -377,7 +377,7 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
                         onValueChange={(v) => updateAsset(fa.id, "condition", v)}
                         disabled={isDisabled}
                       >
-                        <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/80">
+                        <SelectTrigger className="w-full bg-white dark:bg-zinc-900 border-border/80 h-10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -396,8 +396,8 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
                         value={assetData[fa.id]?.remarks || ""}
                         onChange={(e) => updateAsset(fa.id, "remarks", e.target.value)}
                         disabled={isDisabled}
-                        rows={1}
-                        className="min-h-[38px] py-2 bg-white dark:bg-zinc-900 border-border/80 resize-none text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring"
+                        rows={2}
+                        className="min-h-[42px] py-2 bg-white dark:bg-zinc-900 border-border/80 resize-none text-sm placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </div>
                   </div>
@@ -438,10 +438,10 @@ export function EmployeeFormView({ form, readOnly = false }: EmployeeFormViewPro
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-center pb-12">
+        <div className="flex justify-center pb-12 px-2">
           <Button
             size="lg"
-            className="min-w-[240px] h-12 text-sm font-semibold tracking-wide rounded-xl bg-primary hover:bg-primary/95 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-primary/10"
+            className="w-full sm:min-w-[240px] sm:w-auto h-12 text-sm font-semibold tracking-wide rounded-xl bg-primary hover:bg-primary/95 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-primary/10"
             onClick={handleSubmit}
             disabled={isDisabled || submitting || !signature || (!isDynamicValid && form.action_type === "current_verification")}
           >
