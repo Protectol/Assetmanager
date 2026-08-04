@@ -13,20 +13,32 @@ export default async function AuditLogsPage() {
   }
 
   const supabase = await createClient();
-  const { data: logs, error } = await supabase
+
+  // Safely fetch audit logs without forcing strict join that can fail on NULL foreign keys
+  const { data: logs } = await supabase
     .from("audit_logs")
-    .select(`
-      *,
-      user:users!audit_logs_user_id_fkey(id, full_name, email, role)
-    `)
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(200);
 
-  if (error) {
-    throw new Error(error.message);
+  const rawLogs = logs || [];
+  const userIds = Array.from(new Set(rawLogs.map((l) => l.user_id).filter(Boolean)));
+
+  let userMap: Record<string, { id: string; full_name: string; email: string; role: string }> = {};
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, email, role")
+      .in("id", userIds);
+    if (users) {
+      userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+    }
   }
 
-  const auditLogs = (logs || []) as AuditLog[];
+  const auditLogs: AuditLog[] = rawLogs.map((log) => ({
+    ...log,
+    user: log.user_id ? userMap[log.user_id] || null : null,
+  }));
 
   return (
     <div className="space-y-6">

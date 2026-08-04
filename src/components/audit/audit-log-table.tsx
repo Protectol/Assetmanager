@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -116,4 +116,3 @@ export function AuditLogTable({ logs }: AuditLogTableProps) {
   );
 }
 
-import React from "react";
