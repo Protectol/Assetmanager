@@ -32,7 +32,8 @@ export function BulkPrintDialog({ selectedAssets, disabled, companyName = "Prote
     try {
       // Generate QR Data URLs client-side — no API call needed
       const QRCode = await import("qrcode");
-      const appUrl = window.location.origin;
+      const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const qrMap: Record<string, string> = {};
       await Promise.all(
         selectedAssets.map(async (asset) => {

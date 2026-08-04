@@ -31,7 +31,8 @@ export function PrintLabelButton({
     try {
       // Generate QR code client-side — no API call needed
       const QRCode = await import("qrcode");
-      const appUrl = window.location.origin;
+      const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const qrText = `${appUrl}/scan/${assetId}`;
       const qrUrl = await QRCode.default.toDataURL(qrText, {
         width: 200,
