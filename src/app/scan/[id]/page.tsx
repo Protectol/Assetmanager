@@ -6,6 +6,8 @@ import { ReportIssueDialog } from "@/components/public/report-issue-dialog";
 
 // Force this page to always be server-rendered, never cached
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 interface PageProps {
   params: Promise<{ id: string }>;
