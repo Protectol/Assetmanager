@@ -5,12 +5,8 @@ export function createServiceClient() {
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured. Add credentials to .env.local");
   }
-  const { url } = getSupabaseEnv();
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-
-  if (!serviceKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required in .env.local");
-  }
+  const { url, key } = getSupabaseEnv();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || key;
 
   return createClient(url, serviceKey, {
     auth: {

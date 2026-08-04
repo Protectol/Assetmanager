@@ -7,6 +7,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const decodedId = decodeURIComponent(id).trim();
     const body = await request.json();
 
     const { reporter_name, reporter_email, issue_type, description, update_status } = body;
@@ -36,14 +37,19 @@ export async function POST(
 
     const supabase = createServiceClient();
 
-    // Verify asset exists
-    const { data: asset, error: fetchErr } = await supabase
-      .from("assets")
-      .select("id, asset_tag, asset_name, status")
-      .eq("id", id)
-      .single();
+    // Verify asset exists by id or asset_tag
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
+    let query = supabase.from("assets").select("id, asset_tag, asset_name, status");
 
-    if (fetchErr || !asset) {
+    if (isUuid) {
+      query = query.or(`id.eq.${decodedId},asset_tag.ilike.${decodedId}`);
+    } else {
+      query = query.ilike("asset_tag", decodedId);
+    }
+
+    const { data: asset } = await query.maybeSingle();
+
+    if (!asset) {
       return NextResponse.json({ error: "Asset not found." }, { status: 404 });
     }
 
