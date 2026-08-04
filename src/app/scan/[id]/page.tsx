@@ -1,8 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { Building2, ShieldCheck, Tag, Info, PhoneCall, Cpu, Layers, Calendar, UserCheck } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportIssueDialog } from "@/components/public/report-issue-dialog";
+import { fetchPublicAssetScan } from "@/lib/public-scan";
 
 export const dynamic = "force-dynamic";
 
@@ -10,59 +10,10 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function fetchAssetData(rawId: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
-
-  if (!url || !key) return null;
-
-  const supabase = createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
-  const fields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let asset: Record<string, any> | null = null;
-
-  if (isUuid) {
-    const { data } = await supabase.from("assets").select(fields).eq("id", rawId).maybeSingle();
-    asset = data;
-  }
-
-  if (!asset) {
-    const { data } = await supabase.from("assets").select(fields).ilike("asset_tag", rawId).maybeSingle();
-    asset = data;
-  }
-
-  if (!asset) {
-    const { data } = await supabase.from("assets").select(fields).ilike("asset_tag", `%${rawId}%`).limit(1).maybeSingle();
-    asset = data;
-  }
-
-  if (!asset) return null;
-
-  let holder = null;
-  if (asset.current_holder_id) {
-    const { data } = await supabase
-      .from("employees")
-      .select("employee_name, department, location")
-      .eq("id", asset.current_holder_id)
-      .maybeSingle();
-    holder = data;
-  }
-
-  return { asset, holder };
-}
-
 export default async function PublicScanPage({ params }: PageProps) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id).trim();
-  const result = await fetchAssetData(decodedId);
+  const result = await fetchPublicAssetScan(decodedId);
 
   const Header = () => (
     <header className="flex items-center justify-center gap-3 border-b pb-4">
