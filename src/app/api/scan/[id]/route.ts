@@ -25,39 +25,41 @@ export async function GET(
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Try by UUID first, then by asset_tag
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
 
+    let selectFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
     let asset = null;
 
-    if (isUuid) {
-      const { data } = await supabase
-        .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
-        .eq("id", decodedId)
-        .maybeSingle();
-      asset = data;
+    async function fetchAsset(fields: string) {
+      if (isUuid) {
+        const { data, error } = await supabase.from("assets").select(fields).eq("id", decodedId).maybeSingle();
+        if (error) throw error;
+        if (data) return data;
+      }
+      
+      const { data: tagData, error: tagError } = await supabase.from("assets").select(fields).ilike("asset_tag", decodedId).maybeSingle();
+      if (tagError) throw tagError;
+      if (tagData) return tagData;
+
+      const { data: fuzzyData, error: fuzzyError } = await supabase.from("assets").select(fields).ilike("asset_tag", `%${decodedId}%`).limit(1).maybeSingle();
+      if (fuzzyError) throw fuzzyError;
+      return fuzzyData;
     }
 
-    // Fallback: try by asset_tag
-    if (!asset) {
-      const { data } = await supabase
-        .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
-        .ilike("asset_tag", decodedId)
-        .maybeSingle();
-      asset = data;
-    }
-
-    // Second fallback: fuzzy match
-    if (!asset) {
-      const { data } = await supabase
-        .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
-        .ilike("asset_tag", `%${decodedId}%`)
-        .limit(1)
-        .maybeSingle();
-      asset = data;
+    try {
+      asset = await fetchAsset(selectFields);
+    } catch (err: any) {
+      // Fallback if has_sim or sim_number columns do not exist yet (PGRST205)
+      if (err?.code === 'PGRST205' || (err?.message && err.message.includes('has_sim'))) {
+        const fallbackFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
+        try {
+          asset = await fetchAsset(fallbackFields);
+        } catch (fallbackErr) {
+          console.error("Fallback fetch failed", fallbackErr);
+        }
+      } else {
+        console.error("Asset fetch error", err);
+      }
     }
 
     if (!asset) {
