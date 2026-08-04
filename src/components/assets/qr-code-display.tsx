@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+import { getAssetQRContent } from "@/lib/qr";
+
 interface QRCodeDisplayProps {
   assetId: string;
   assetTag: string;
@@ -25,11 +27,8 @@ export function QRCodeDisplay({ assetId, assetTag, assetName }: QRCodeDisplayPro
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Compose QR content: asset URL so scanning opens asset detail page
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
-  const qrText = `${appUrl}/scan/${assetId}`;
+  // Compose QR content using production public URL helper
+  const qrText = getAssetQRContent(assetTag, assetId);
 
   useEffect(() => {
     if (!open) return;

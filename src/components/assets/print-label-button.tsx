@@ -5,6 +5,8 @@ import { Printer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+import { getAssetQRContent } from "@/lib/qr";
+
 interface PrintLabelButtonProps {
   assetId: string;
   assetTag: string;
@@ -31,9 +33,7 @@ export function PrintLabelButton({
     try {
       // Generate QR code client-side — no API call needed
       const QRCode = await import("qrcode");
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const qrText = `${appUrl}/scan/${assetId}`;
+      const qrText = getAssetQRContent(assetTag, assetId);
       const qrUrl = await QRCode.default.toDataURL(qrText, {
         width: 200,
         margin: 1,

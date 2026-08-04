@@ -17,10 +17,39 @@ export async function generateQRDataURL(text: string, options?: QRCode.QRCodeToD
   }
 }
 
+export function getPublicAppUrl(overrideUrl?: string): string {
+  if (overrideUrl && !overrideUrl.includes("localhost") && !overrideUrl.includes("127.0.0.1")) {
+    return overrideUrl.replace(/\/$/, "");
+  }
+
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl.replace(/\/$/, "");
+  }
+
+  if (
+    typeof window !== "undefined" &&
+    window.location.origin &&
+    !window.location.origin.includes("localhost") &&
+    !window.location.origin.includes("127.0.0.1")
+  ) {
+    return window.location.origin.replace(/\/$/, "");
+  }
+
+  return "https://asset-portal.protectolonline.com";
+}
+
 export function getAssetQRContent(assetTag: string, assetId?: string, appUrl?: string): string {
-  const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getPublicAppUrl(appUrl);
   if (assetId) {
     return `${baseUrl}/scan/${assetId}`;
   }
   return assetTag;
+}
+
+export function sanitizeQRText(qrText: string | null | undefined, assetTag: string, assetId: string): string {
+  if (!qrText || qrText.includes("localhost") || qrText.includes("127.0.0.1")) {
+    return getAssetQRContent(assetTag, assetId);
+  }
+  return qrText;
 }

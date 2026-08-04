@@ -15,6 +15,8 @@ import {
 import { toast } from "sonner";
 import type { Asset } from "@/types";
 
+import { getAssetQRContent } from "@/lib/qr";
+
 interface BulkPrintDialogProps {
   selectedAssets: Asset[];
   disabled?: boolean;
@@ -32,13 +34,11 @@ export function BulkPrintDialog({ selectedAssets, disabled, companyName = "Prote
     try {
       // Generate QR Data URLs client-side — no API call needed
       const QRCode = await import("qrcode");
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const qrMap: Record<string, string> = {};
       await Promise.all(
         selectedAssets.map(async (asset) => {
           try {
-            const qrText = `${appUrl}/scan/${asset.id}`;
+            const qrText = getAssetQRContent(asset.asset_tag, asset.id);
             qrMap[asset.id] = await QRCode.default.toDataURL(qrText, {
               width: 200,
               margin: 1,
