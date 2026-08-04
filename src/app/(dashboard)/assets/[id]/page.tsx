@@ -8,7 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/ui/loading";
-import { formatDate, formatDateTime, capitalize } from "@/lib/utils";
+import { QRCodeDisplay } from "@/components/assets/qr-code-display";
+import { PrintLabelButton } from "@/components/assets/print-label-button";
+import { LifecycleTracker } from "@/components/assets/lifecycle-tracker";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import type { Asset, AssetAssignment, AssetHistory } from "@/types";
 
 interface AssetDetailPageProps {
@@ -41,7 +44,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
 
   if (!asset) notFound();
 
-  const [{ data: assignment }, { data: history }] = await Promise.all([
+  const [{ data: assignment }, { data: history }, { data: companySetting }] = await Promise.all([
     supabase
       .from("asset_assignments")
       .select(`
@@ -63,8 +66,10 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
       `)
       .eq("asset_id", id)
       .order("date", { ascending: false }),
+    supabase.from("app_settings").select("value").eq("key", "company_name").maybeSingle(),
   ]);
 
+  const companyName = companySetting?.value || process.env.NEXT_PUBLIC_COMPANY_NAME || "Protectol Health";
   const typedAsset = asset as Asset;
   const typedAssignment = assignment as (AssetAssignment & {
     assigned_by_user?: { id: string; full_name: string };
@@ -73,7 +78,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <Button variant="ghost" size="sm" asChild className="-ml-2 mb-2">
             <Link href="/assets">
@@ -83,25 +88,40 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
           </Button>
           <h2 className="text-2xl font-bold tracking-tight">{typedAsset.asset_name}</h2>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-muted-foreground">{typedAsset.asset_tag}</span>
+            <span className="font-mono font-bold text-sm text-primary">{typedAsset.asset_tag}</span>
             <StatusBadge status={typedAsset.status} />
             <StatusBadge status={typedAsset.condition} />
           </div>
         </div>
-        {canManage && (
-          <Button asChild>
-            <Link href={`/assets/${id}/edit`}>
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          <QRCodeDisplay
+            assetId={typedAsset.id}
+            assetTag={typedAsset.asset_tag}
+            assetName={typedAsset.asset_name}
+          />
+          <PrintLabelButton
+            assetId={typedAsset.id}
+            assetTag={typedAsset.asset_tag}
+            assetName={typedAsset.asset_name}
+            serialNumber={typedAsset.serial_number}
+            companyName={companyName}
+          />
+          {canManage && (
+            <Button asChild>
+              <Link href={`/assets/${id}/edit`}>
+                <Pencil className="h-4 w-4" />
+                Edit Asset
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Asset Details</CardTitle>
+            <CardTitle>Asset Technical Specifications</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2">
@@ -125,7 +145,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
 
         <Card>
           <CardHeader>
-            <CardTitle>Current Assignment</CardTitle>
+            <CardTitle>Current Employee Assignment</CardTitle>
           </CardHeader>
           <CardContent>
             {typedAssignment?.employee ? (
@@ -135,7 +155,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
                   value={
                     <Link
                       href={`/employees/${typedAssignment.employee.id}`}
-                      className="text-primary hover:underline"
+                      className="text-primary font-medium hover:underline"
                     >
                       {typedAssignment.employee.employee_name}
                     </Link>
@@ -159,20 +179,17 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
                   value={
                     <Link
                       href={`/employees/${typedAsset.current_holder.id}`}
-                      className="text-primary hover:underline"
+                      className="text-primary font-medium hover:underline"
                     >
                       {typedAsset.current_holder.employee_name}
                     </Link>
                   }
                 />
-                <p className="text-sm text-muted-foreground">
-                  Holder recorded on asset but no active assignment entry found.
-                </p>
               </dl>
             ) : (
               <EmptyState
                 title="Not assigned"
-                description="This asset is not currently assigned to any employee"
+                description="This asset is currently in available inventory"
               />
             )}
           </CardContent>
@@ -181,57 +198,10 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
 
       <Card>
         <CardHeader>
-          <CardTitle>Asset History</CardTitle>
+          <CardTitle>Asset Lifecycle & Audit Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          {typedHistory.length === 0 ? (
-            <EmptyState title="No history" description="Asset movements and changes will appear here" />
-          ) : (
-            <div className="relative space-y-0">
-              {typedHistory.map((item, index) => (
-                <div key={item.id} className="relative flex gap-4 pb-8 last:pb-0">
-                  {index < typedHistory.length - 1 && (
-                    <div className="absolute left-[7px] top-4 h-full w-px bg-border" />
-                  )}
-                  <div className="relative z-10 mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-primary bg-background" />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge status={item.action} />
-                      <span className="text-sm text-muted-foreground">{formatDateTime(item.date)}</span>
-                    </div>
-                    <div className="text-sm">
-                      {item.employee && (
-                        <p>
-                          Team Member:{" "}
-                          <Link
-                            href={`/employees/${item.employee_id}`}
-                            className="text-primary hover:underline"
-                          >
-                            {item.employee.employee_name}
-                          </Link>
-                        </p>
-                      )}
-                      {(item.previous_holder || item.current_holder) && (
-                        <p className="text-muted-foreground">
-                          {item.previous_holder && (
-                            <span>From {item.previous_holder.employee_name}</span>
-                          )}
-                          {item.previous_holder && item.current_holder && " → "}
-                          {item.current_holder && (
-                            <span>To {item.current_holder.employee_name}</span>
-                          )}
-                        </p>
-                      )}
-                      {item.remarks && <p className="mt-1">{item.remarks}</p>}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        By {item.performer?.full_name || "System"} · {capitalize(item.action)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <LifecycleTracker currentStatus={typedAsset.status} history={typedHistory} />
         </CardContent>
       </Card>
     </div>

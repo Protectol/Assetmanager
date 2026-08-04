@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Employee, Form, FormAsset, Asset } from "@/types";
-import { formatDate, formatDateTime, capitalize } from "@/lib/utils";
+import { formatDateTime, capitalize } from "@/lib/utils";
 
 interface PDFData {
   form: Form;

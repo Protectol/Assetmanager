@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { formatDateTime, capitalize } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import type { AssetHistory } from "@/types";
 import { EmptyState } from "@/components/ui/loading";
 

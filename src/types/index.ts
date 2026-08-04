@@ -1,7 +1,16 @@
 export type UserRole = "admin" | "it" | "hr";
 export type EmployeeStatus = "active" | "inactive" | "resigned" | "on_leave";
 export type AssetCondition = "new" | "good" | "damaged" | "lost";
-export type AssetStatus = "available" | "assigned" | "repair" | "lost" | "returned";
+export type AssetStatus =
+  | "available"
+  | "assigned"
+  | "repair"
+  | "lost"
+  | "returned"
+  | "draft"
+  | "reserved"
+  | "maintenance"
+  | "disposed";
 export type FormActionType = "onboarding" | "exchange" | "return" | "verification" | "current_verification";
 export type FormStatus = "pending" | "completed" | "expired" | "approved" | "rejected";
 export type HistoryAction =
@@ -54,6 +63,8 @@ export interface Asset {
   status: AssetStatus;
   current_holder_id?: string;
   remarks?: string;
+  qr_code_data?: string;
+  label_template_id?: string;
   created_at: string;
   updated_at: string;
   current_holder?: Employee;
@@ -167,3 +178,75 @@ export interface Notification {
   link?: string;
   created_at: string;
 }
+
+export interface LabelElement {
+  id: string;
+  type: "logo" | "company_name" | "text" | "asset_name" | "asset_id" | "qr_code" | "barcode" | "serial_number" | "department";
+  content?: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  fontWeight?: "normal" | "bold" | "semibold";
+  fontFamily?: "sans-serif" | "monospace" | "serif";
+  alignment?: "left" | "center" | "right";
+  visible: boolean;
+}
+
+export interface LabelTemplate {
+  id: string;
+  name: string;
+  is_default: boolean;
+  width_mm: number;
+  height_mm: number;
+  config: {
+    elements: LabelElement[];
+    style: {
+      border: boolean;
+      borderColor: string;
+      backgroundColor: string;
+      padding: number;
+    };
+  };
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmployeeImportSession {
+  id: string;
+  imported_by?: string;
+  new_count: number;
+  updated_count: number;
+  invalid_count: number;
+  filename?: string;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  user_id?: string;
+  action: string;
+  table_name: string;
+  record_id?: string;
+  payload?: Record<string, unknown>;
+  created_at: string;
+  user?: User;
+}
+
+export interface ImportPreviewRow {
+  row_index: number;
+  employee_name: string;
+  employee_id: string;
+  department: string;
+  designation: string;
+  location: string;
+  email: string;
+  phone_number?: string;
+  manager?: string;
+  status: string;
+  action_type: "new" | "update" | "invalid" | "duplicate";
+  validation_error?: string;
+}
+

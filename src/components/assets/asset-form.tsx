@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/ui/loading";
+import { AssetIdGenerator } from "@/components/assets/asset-id-generator";
 import { createAsset, updateAsset } from "@/lib/actions/assets";
 import type { Asset } from "@/types";
 
@@ -32,7 +33,17 @@ const assetSchema = z.object({
   purchase_date: z.string().optional(),
   warranty_expiry: z.string().optional(),
   condition: z.enum(["new", "good", "damaged", "lost"]),
-  status: z.enum(["available", "assigned", "repair", "lost", "returned"]),
+  status: z.enum([
+    "available",
+    "assigned",
+    "repair",
+    "lost",
+    "returned",
+    "draft",
+    "reserved",
+    "maintenance",
+    "disposed",
+  ]),
   remarks: z.string().optional(),
 });
 
@@ -71,6 +82,7 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
 
   const condition = watch("condition");
   const status = watch("status");
+  const assetTag = watch("asset_tag");
 
   function onSubmit(values: AssetFormValues) {
     startTransition(async () => {
@@ -94,7 +106,7 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="asset_name">Asset Name *</Label>
-              <Input id="asset_name" {...register("asset_name")} placeholder="MacBook Pro 14" />
+              <Input id="asset_name" {...register("asset_name")} placeholder="MacBook Pro 16 M3" />
               {errors.asset_name && (
                 <p className="text-sm text-destructive">{errors.asset_name.message}</p>
               )}
@@ -106,13 +118,15 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
                 <p className="text-sm text-destructive">{errors.asset_type.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="asset_tag">Asset Tag *</Label>
-              <Input id="asset_tag" {...register("asset_tag")} placeholder="IT-LAP-001" />
-              {errors.asset_tag && (
-                <p className="text-sm text-destructive">{errors.asset_tag.message}</p>
-              )}
+
+            <div className="sm:col-span-2">
+              <AssetIdGenerator
+                value={assetTag}
+                onChange={(val) => setValue("asset_tag", val, { shouldValidate: true })}
+                error={errors.asset_tag?.message}
+              />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="serial_number">Serial Number</Label>
               <Input id="serial_number" {...register("serial_number")} placeholder="C02XYZ..." />
@@ -159,7 +173,11 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
                 <SelectContent>
                   <SelectItem value="available">Available</SelectItem>
                   <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="repair">Repair</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="reserved">Reserved</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="repair">In Repair</SelectItem>
+                  <SelectItem value="disposed">Disposed</SelectItem>
                   <SelectItem value="lost">Lost</SelectItem>
                   <SelectItem value="returned">Returned</SelectItem>
                 </SelectContent>

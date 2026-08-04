@@ -45,7 +45,8 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Building2 className="h-6 w-6" />
           </div>
-          <CardTitle className="text-2xl">Asset Manager</CardTitle>
+          <CardTitle className="text-xl font-bold">Protectol Health</CardTitle>
+          <p className="text-sm font-medium text-muted-foreground">Asset Manager</p>
           <CardDescription>Sign in to your internal account</CardDescription>
         </CardHeader>
         <CardContent>

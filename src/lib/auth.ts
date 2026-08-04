@@ -53,3 +53,19 @@ export function canGenerateForms(role: UserRole): boolean {
 export function canReviewVerifications(role: UserRole): boolean {
   return role === "admin" || role === "it";
 }
+
+export function canPrintLabels(role: UserRole): boolean {
+  return role === "admin" || role === "it";
+}
+
+export function canManageLabelTemplates(role: UserRole): boolean {
+  return role === "admin" || role === "it";
+}
+
+export function canImportEmployees(role: UserRole): boolean {
+  return role === "admin" || role === "hr" || role === "it";
+}
+
+export function canViewAuditLogs(role: UserRole): boolean {
+  return role === "admin";
+}

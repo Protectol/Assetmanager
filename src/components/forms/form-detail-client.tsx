@@ -379,6 +379,7 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
                 {form.submission.signature_type === "type" ? (
                   <p className="font-serif text-2xl text-foreground italic">{form.submission.employee_signature}</p>
                 ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={form.submission.employee_signature}
                     alt="Team Member Signature"

@@ -11,14 +11,18 @@ export default async function AssetsPage() {
   const supabase = await createClient();
   const user = await getCurrentUser();
 
-  const { data: assets } = await supabase
-    .from("assets")
-    .select(`
-      *,
-      current_holder:employees!assets_current_holder_id_fkey(id, employee_name, employee_id)
-    `)
-    .order("created_at", { ascending: false });
+  const [{ data: assets }, { data: companySetting }] = await Promise.all([
+    supabase
+      .from("assets")
+      .select(`
+        *,
+        current_holder:employees!assets_current_holder_id_fkey(id, employee_name, employee_id)
+      `)
+      .order("created_at", { ascending: false }),
+    supabase.from("app_settings").select("value").eq("key", "company_name").maybeSingle(),
+  ]);
 
+  const companyName = companySetting?.value || process.env.NEXT_PUBLIC_COMPANY_NAME || "Protectol Health";
   const canManage = user ? canManageAssets(user.role) : false;
 
   return (
@@ -43,7 +47,7 @@ export default async function AssetsPage() {
           <CardTitle>All Assets</CardTitle>
         </CardHeader>
         <CardContent>
-          <AssetTable assets={(assets as Asset[]) || []} />
+          <AssetTable assets={(assets as Asset[]) || []} companyName={companyName} />
         </CardContent>
       </Card>
     </div>

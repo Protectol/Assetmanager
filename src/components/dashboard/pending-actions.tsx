@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { formatDateTime, capitalize } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import type { Form } from "@/types";
 import { EmptyState } from "@/components/ui/loading";
 import { ExternalLink } from "lucide-react";

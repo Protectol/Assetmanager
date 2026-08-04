@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Team Member Asset Management",
-  description: "Internal asset management system for IT and HR",
+  title: "Protectol Health Asset Manager",
+  description: "Enterprise asset management system for Protectol Health",
 };
 
 export default function RootLayout({

@@ -12,6 +12,8 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Tag,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,8 +23,10 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Team Members", href: "/employees", icon: Users },
   { name: "Assets", href: "/assets", icon: Package },
+  { name: "Label Templates", href: "/label-templates", icon: Tag },
   { name: "Forms", href: "/forms", icon: FileText },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Audit Logs", href: "/audit-logs", icon: Shield },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -43,7 +47,10 @@ export function Sidebar() {
             <Building2 className="h-4 w-4" />
           </div>
           {!collapsed && (
-            <span className="text-sm font-semibold">Asset Manager</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold leading-tight text-primary">Protectol Health</span>
+              <span className="text-[11px] leading-tight text-muted-foreground">Asset Manager</span>
+            </div>
           )}
         </Link>
         <Button
