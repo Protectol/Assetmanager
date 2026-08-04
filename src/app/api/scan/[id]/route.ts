@@ -28,7 +28,8 @@ export async function GET(
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
 
     const selectFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
-    let asset = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let asset: Record<string, any> | null = null;
 
     async function fetchAsset(fields: string) {
       if (isUuid) {
