@@ -11,14 +11,19 @@ export async function GET(
   const decodedId = decodeURIComponent(id).trim();
 
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const key =
-      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // Prefer service role key to bypass RLS; fall back to anon key
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+    const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)?.trim();
+    const key = serviceKey || anonKey;
 
     if (!url || !key) {
+      console.error("Scan API: Missing Supabase URL or key");
       return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+    }
+
+    if (!serviceKey) {
+      console.warn("Scan API: Using anon key — ensure a public RLS policy exists on assets table.");
     }
 
     const supabase = createClient(url, key, {
@@ -27,41 +32,52 @@ export async function GET(
 
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
 
-    const selectFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let asset: Record<string, any> | null = null;
 
-    async function fetchAsset(fields: string) {
-      if (isUuid) {
-        const { data, error } = await supabase.from("assets").select(fields).eq("id", decodedId).maybeSingle();
-        if (error) throw error;
-        if (data) return data;
-      }
-      
-      const { data: tagData, error: tagError } = await supabase.from("assets").select(fields).ilike("asset_tag", decodedId).maybeSingle();
-      if (tagError) throw tagError;
-      if (tagData) return tagData;
+    const baseFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
+    const simFields = `${baseFields}, has_sim, sim_number`;
 
-      const { data: fuzzyData, error: fuzzyError } = await supabase.from("assets").select(fields).ilike("asset_tag", `%${decodedId}%`).limit(1).maybeSingle();
-      if (fuzzyError) throw fuzzyError;
-      return fuzzyData;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async function runQuery(fields: string, buildQuery: (q: any) => any) {
+      const q = supabase.from("assets").select(fields);
+      const { data, error } = await buildQuery(q);
+      if (error) throw error;
+      return data ?? null;
     }
 
-    try {
-      asset = await fetchAsset(selectFields);
-    } catch (err: unknown) {
-      // Fallback if has_sim or sim_number columns do not exist yet (PGRST205)
-      const errorObj = err as { code?: string; message?: string };
-      if (errorObj?.code === 'PGRST205' || (errorObj?.message && errorObj.message.includes('has_sim'))) {
-        const fallbackFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
-        try {
-          asset = await fetchAsset(fallbackFields);
-        } catch (fallbackErr) {
-          console.error("Fallback fetch failed", fallbackErr);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async function fetchAsset(buildQuery: (q: any) => any) {
+      try {
+        return await runQuery(simFields, buildQuery);
+      } catch (err: unknown) {
+        const e = err as { code?: string; message?: string };
+        // If has_sim / sim_number columns don't exist yet, retry without them
+        if (e?.code === "PGRST205" || e?.message?.includes("has_sim") || e?.message?.includes("sim_number")) {
+          try {
+            return await runQuery(baseFields, buildQuery);
+          } catch {
+            return null;
+          }
         }
-      } else {
-        console.error("Asset fetch error", err);
+        console.error("Scan API query error:", err);
+        return null;
       }
+    }
+
+    // 1. Try by UUID
+    if (isUuid) {
+      asset = await fetchAsset((q) => q.eq("id", decodedId).maybeSingle());
+    }
+
+    // 2. Fallback: exact asset_tag match
+    if (!asset) {
+      asset = await fetchAsset((q) => q.ilike("asset_tag", decodedId).maybeSingle());
+    }
+
+    // 3. Fallback: fuzzy asset_tag match
+    if (!asset) {
+      asset = await fetchAsset((q) => q.ilike("asset_tag", `%${decodedId}%`).limit(1).maybeSingle());
     }
 
     if (!asset) {
@@ -79,7 +95,6 @@ export async function GET(
       holder = holderData;
     }
 
-    // Return ONLY the safe public fields
     return NextResponse.json({
       asset: {
         id: asset.id,
@@ -91,8 +106,8 @@ export async function GET(
         model: asset.model,
         condition: asset.condition,
         status: asset.status,
-        has_sim: asset.has_sim,
-        sim_number: asset.sim_number,
+        has_sim: asset.has_sim ?? null,
+        sim_number: asset.sim_number ?? null,
       },
       holder: holder ? {
         employee_name: holder.employee_name,
