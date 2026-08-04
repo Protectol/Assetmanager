@@ -101,6 +101,40 @@ export default async function PublicScanPage({ params }: PageProps) {
           </div>
 
           <CardContent className="p-5 space-y-5">
+            {/* Assigned Holder Card */}
+            <div className="rounded-xl border bg-slate-50/80 dark:bg-slate-900/60 p-4 flex items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-extrabold text-base border border-primary/20">
+                  {holder?.employee_name ? holder.employee_name.charAt(0).toUpperCase() : <UserCheck className="h-5 w-5" />}
+                </div>
+                <div className="space-y-0.5 min-w-0">
+                  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <UserCheck className="h-3 w-3 text-primary" />
+                    Assigned Holder
+                  </div>
+                  <div className="font-bold text-base text-foreground leading-tight truncate">
+                    {holder?.employee_name || "Unassigned"}
+                  </div>
+                  {(holder?.department || holder?.location) && (
+                    <div className="text-xs text-muted-foreground font-medium truncate">
+                      {[holder.department, holder.location].filter(Boolean).join(" • ")}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    holder
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                      : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  {holder ? "Active Custody" : "In Stock"}
+                </span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4 text-sm border-b pb-4">
               <div className="space-y-1">
                 <dt className="text-xs font-medium text-muted-foreground flex items-center gap-1">
@@ -142,9 +176,7 @@ export default async function PublicScanPage({ params }: PageProps) {
                   Department
                 </dt>
                 <dd className="font-semibold text-foreground">
-                  {(holder as { department?: string; location?: string } | null)?.department ||
-                    (holder as { department?: string; location?: string } | null)?.location ||
-                    "Central Inventory"}
+                  {holder?.department || "Central Inventory"}
                 </dd>
               </div>
 
