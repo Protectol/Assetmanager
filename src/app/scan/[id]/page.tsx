@@ -1,20 +1,99 @@
+import { createClient } from "@supabase/supabase-js";
 import { Building2, ShieldCheck, Tag, Info, PhoneCall, Cpu, Layers, Calendar, UserCheck } from "lucide-react";
-import { headers } from "next/headers";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportIssueDialog } from "@/components/public/report-issue-dialog";
-import { fetchPublicAssetScan } from "@/lib/public-scan";
 
+// Force this page to always be server-rendered, never cached
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function lookupAsset(rawId: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+
+  if (!url || !key) {
+    console.error("[scan] Supabase env vars missing");
+    return null;
+  }
+
+  const supabase = createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { fetch: (u, init) => fetch(u, { ...init, cache: "no-store" }) },
+  });
+
+  const FIELDS =
+    "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
+
+  const isUuid = UUID_RE.test(rawId);
+
+  // Try by UUID first, then exact tag, then fuzzy tag
+  if (isUuid) {
+    const { data, error } = await supabase.from("assets").select(FIELDS).eq("id", rawId).maybeSingle();
+    if (error) console.error("[scan] uuid lookup error:", error);
+    if (data) {
+      let holder = null;
+      if (data.current_holder_id) {
+        const { data: h } = await supabase
+          .from("employees")
+          .select("employee_name, department, location")
+          .eq("id", data.current_holder_id)
+          .maybeSingle();
+        holder = h;
+      }
+      return { asset: data, holder };
+    }
+  }
+
+  const { data: byTag } = await supabase.from("assets").select(FIELDS).ilike("asset_tag", rawId).maybeSingle();
+  if (byTag) {
+    let holder = null;
+    if (byTag.current_holder_id) {
+      const { data: h } = await supabase
+        .from("employees")
+        .select("employee_name, department, location")
+        .eq("id", byTag.current_holder_id)
+        .maybeSingle();
+      holder = h;
+    }
+    return { asset: byTag, holder };
+  }
+
+  const { data: fuzzy } = await supabase
+    .from("assets")
+    .select(FIELDS)
+    .ilike("asset_tag", `%${rawId}%`)
+    .limit(1)
+    .maybeSingle();
+  if (fuzzy) {
+    let holder = null;
+    if (fuzzy.current_holder_id) {
+      const { data: h } = await supabase
+        .from("employees")
+        .select("employee_name, department, location")
+        .eq("id", fuzzy.current_holder_id)
+        .maybeSingle();
+      holder = h;
+    }
+    return { asset: fuzzy, holder };
+  }
+
+  console.error("[scan] asset not found for id:", rawId);
+  return null;
+}
+
 export default async function PublicScanPage({ params }: PageProps) {
   const { id } = await params;
   const decodedId = decodeURIComponent(id).trim();
-  const result = await fetchPublicAssetScan(decodedId);
+  const result = await lookupAsset(decodedId);
 
   const Header = () => (
     <header className="flex items-center justify-center gap-3 border-b pb-4">
@@ -29,10 +108,6 @@ export default async function PublicScanPage({ params }: PageProps) {
   );
 
   if (!result) {
-    const headersList = await headers();
-    const host = headersList.get("host") ?? "unknown";
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "unset";
-
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 md:p-10 flex flex-col items-center justify-center">
         <div className="w-full max-w-md space-y-6">
@@ -47,11 +122,6 @@ export default async function PublicScanPage({ params }: PageProps) {
                 The scanned identifier{" "}
                 <span className="font-mono font-semibold text-foreground">{decodedId}</span>{" "}
                 does not match an active record in the system.
-              </p>
-              <p className="text-[10px] text-muted-foreground/80">
-                Host: <span className="font-mono">{host}</span>
-                <br />
-                Configured app URL: <span className="font-mono">{appUrl}</span>
               </p>
             </div>
             <div className="pt-2 text-xs text-muted-foreground border-t">
@@ -149,7 +219,9 @@ export default async function PublicScanPage({ params }: PageProps) {
                   Department
                 </dt>
                 <dd className="font-semibold text-foreground">
-                  {holder?.department || holder?.location || "Central Inventory"}
+                  {(holder as { department?: string; location?: string } | null)?.department ||
+                    (holder as { department?: string; location?: string } | null)?.location ||
+                    "Central Inventory"}
                 </dd>
               </div>
 

@@ -56,11 +56,6 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Public QR scan routes — no auth required
-  if (pathname.startsWith("/scan/") || pathname.startsWith("/api/scan/")) {
-    return supabaseResponse;
-  }
-
   // Protected routes - require auth
   if (
     pathname.startsWith("/dashboard") ||
