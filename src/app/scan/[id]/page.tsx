@@ -29,7 +29,8 @@ export default async function PublicScanPage({ params }: PageProps) {
   );
 
   if (!result) {
-    const host = headers().get("host") ?? "unknown";
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "unknown";
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "unset";
 
     return (
