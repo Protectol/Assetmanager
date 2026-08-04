@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { AssetIdGenerator } from "@/components/assets/asset-id-generator";
 import { createAsset, updateAsset } from "@/lib/actions/assets";
@@ -45,6 +46,8 @@ const assetSchema = z.object({
     "disposed",
   ]),
   remarks: z.string().optional(),
+  has_sim: z.boolean().optional(),
+  sim_number: z.string().optional(),
 });
 
 type AssetFormValues = z.infer<typeof assetSchema>;
@@ -77,12 +80,18 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
       condition: asset?.condition ?? "new",
       status: asset?.status ?? "available",
       remarks: asset?.remarks ?? "",
+      has_sim: asset?.has_sim ?? false,
+      sim_number: asset?.sim_number ?? "",
     },
   });
 
   const condition = watch("condition");
   const status = watch("status");
   const assetTag = watch("asset_tag");
+  const assetType = watch("asset_type");
+  const hasSim = watch("has_sim");
+
+  const isPhone = typeof assetType === "string" && ["phone", "mobile", "smartphone", "iphone", "android", "cell"].some(t => assetType.toLowerCase().includes(t));
 
   function onSubmit(values: AssetFormValues) {
     startTransition(async () => {
@@ -139,6 +148,27 @@ export function AssetForm({ asset, mode }: AssetFormProps) {
               <Label htmlFor="model">Model</Label>
               <Input id="model" {...register("model")} placeholder="MacBook Pro M3" />
             </div>
+
+            {isPhone && (
+              <div className="sm:col-span-2 space-y-4 rounded-lg border p-4 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">SIM Card Assigned?</Label>
+                    <p className="text-sm text-muted-foreground">Enable this if this phone has a SIM card.</p>
+                  </div>
+                  <Switch
+                    checked={hasSim}
+                    onCheckedChange={(val) => setValue("has_sim", val, { shouldValidate: true })}
+                  />
+                </div>
+                {hasSim && (
+                  <div className="space-y-2 pt-2">
+                    <Label htmlFor="sim_number">SIM Number</Label>
+                    <Input id="sim_number" {...register("sim_number")} placeholder="89971..." />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="purchase_date">Purchase Date</Label>
               <Input id="purchase_date" type="date" {...register("purchase_date")} />

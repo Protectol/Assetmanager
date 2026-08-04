@@ -33,7 +33,7 @@ export async function GET(
     if (isUuid) {
       const { data } = await supabase
         .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id")
+        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
         .eq("id", decodedId)
         .maybeSingle();
       asset = data;
@@ -43,7 +43,7 @@ export async function GET(
     if (!asset) {
       const { data } = await supabase
         .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id")
+        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
         .ilike("asset_tag", decodedId)
         .maybeSingle();
       asset = data;
@@ -53,7 +53,7 @@ export async function GET(
     if (!asset) {
       const { data } = await supabase
         .from("assets")
-        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id")
+        .select("id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number")
         .ilike("asset_tag", `%${decodedId}%`)
         .limit(1)
         .maybeSingle();
@@ -87,6 +87,8 @@ export async function GET(
         model: asset.model,
         condition: asset.condition,
         status: asset.status,
+        has_sim: asset.has_sim,
+        sim_number: asset.sim_number,
       },
       holder: holder ? {
         employee_name: holder.employee_name,

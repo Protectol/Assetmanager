@@ -16,6 +16,8 @@ interface AssetData {
   model?: string;
   condition: string;
   status: string;
+  has_sim?: boolean;
+  sim_number?: string;
 }
 
 interface HolderData {
@@ -179,6 +181,18 @@ export default function PublicScanPage({ params }: { params: Promise<{ id: strin
                   {asset.serial_number || "—"}
                 </dd>
               </div>
+
+              {asset.has_sim && (
+                <div className="space-y-1">
+                  <dt className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <PhoneCall className="h-3.5 w-3.5" />
+                    SIM Number
+                  </dt>
+                  <dd className="font-mono text-xs font-bold text-foreground">
+                    {asset.sim_number || "No number assigned"}
+                  </dd>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <dt className="text-xs font-medium text-muted-foreground flex items-center gap-1">

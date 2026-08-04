@@ -129,6 +129,9 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
               <DetailField label="Serial Number" value={typedAsset.serial_number} />
               <DetailField label="Brand" value={typedAsset.brand} />
               <DetailField label="Model" value={typedAsset.model} />
+              {typedAsset.has_sim && (
+                <DetailField label="SIM Number" value={typedAsset.sim_number || "No number assigned"} />
+              )}
               <DetailField label="Purchase Date" value={formatDate(typedAsset.purchase_date)} />
               <DetailField label="Warranty Expiry" value={formatDate(typedAsset.warranty_expiry)} />
               <DetailField label="Created" value={formatDateTime(typedAsset.created_at)} />

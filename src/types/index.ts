@@ -65,6 +65,8 @@ export interface Asset {
   remarks?: string;
   qr_code_data?: string;
   label_template_id?: string;
+  has_sim?: boolean;
+  sim_number?: string;
   created_at: string;
   updated_at: string;
   current_holder?: Employee;

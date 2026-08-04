@@ -18,6 +18,8 @@ export interface AssetFormData {
   condition: AssetCondition;
   status: AssetStatus;
   remarks?: string;
+  has_sim?: boolean;
+  sim_number?: string;
 }
 
 async function requireAssetManager() {
@@ -60,6 +62,8 @@ export async function createAsset(data: AssetFormData) {
       condition: data.condition,
       status: data.status,
       remarks: emptyToNull(data.remarks),
+      has_sim: data.has_sim ?? false,
+      sim_number: emptyToNull(data.sim_number),
     })
     .select()
     .single();
@@ -116,6 +120,8 @@ export async function updateAsset(id: string, data: AssetFormData) {
       condition: data.condition,
       status: data.status,
       remarks: emptyToNull(data.remarks),
+      has_sim: data.has_sim ?? false,
+      sim_number: emptyToNull(data.sim_number),
     })
     .eq("id", id);
 
