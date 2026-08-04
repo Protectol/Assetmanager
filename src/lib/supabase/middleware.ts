@@ -38,8 +38,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL(user ? "/dashboard" : "/login", request.url));
   }
 
-  // Public routes - employee forms
-  if (pathname.startsWith("/form/")) {
+  // Public routes - employee forms and public asset QR scanning
+  if (pathname.startsWith("/form/") || pathname.startsWith("/scan/")) {
     return supabaseResponse;
   }
 
@@ -51,8 +51,8 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Public API routes for employee form submission
-  if (pathname.startsWith("/api/forms/public/")) {
+  // Public API routes for employee form submission and public asset QR scanning
+  if (pathname.startsWith("/api/forms/public/") || pathname.startsWith("/api/scan/")) {
     return supabaseResponse;
   }
 
