@@ -1,14 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/env";
+import {
+  getSupabaseAnonKey,
+  getSupabaseEnv,
+  getSupabaseServiceKey,
+  getSupabaseUrl,
+  isSupabaseConfigured,
+  isSupabaseServiceConfigured,
+} from "@/lib/supabase/env";
 
 export function createServiceClient() {
-  if (!isSupabaseConfigured()) {
+  const url = getSupabaseUrl();
+  const serviceKey = getSupabaseServiceKey();
+  const anonKey = getSupabaseAnonKey();
+
+  if (!url || (!serviceKey && !anonKey)) {
     throw new Error("Supabase is not configured. Add credentials to .env.local");
   }
-  const { url, key } = getSupabaseEnv();
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || key;
 
-  return createClient(url, serviceKey, {
+  if (!isSupabaseConfigured() && !isSupabaseServiceConfigured()) {
+    throw new Error("Supabase is not configured. Add credentials to .env.local");
+  }
+
+  const key = serviceKey || anonKey || getSupabaseEnv().key;
+
+  return createClient(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

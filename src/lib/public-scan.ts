@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createServiceClient } from "@/lib/supabase/admin";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export interface PublicScanAsset {
   id: string;
@@ -34,17 +35,12 @@ const BASE_FIELDS =
 const SIM_FIELDS = `${BASE_FIELDS}, has_sim, sim_number`;
 
 function createScanClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
-
-  if (!url || !key) return null;
-
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  try {
+    return createServiceClient();
+  } catch (error) {
+    console.error("Public scan service client creation failed:", error);
+    return null;
+  }
 }
 
 function isMissingSimColumnError(err: unknown): boolean {
@@ -141,7 +137,10 @@ export async function fetchPublicAssetScan(
   if (!supabase) return null;
 
   const asset = await fetchAssetRecord(supabase, decodedId);
-  if (!asset) return null;
+  if (!asset) {
+    console.error("Public scan failure: asset not found for", decodedId);
+    return null;
+  }
 
   let holder: PublicScanHolder | null = null;
   if (asset.current_holder_id) {
