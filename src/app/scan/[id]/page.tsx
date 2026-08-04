@@ -1,4 +1,5 @@
 import { Building2, ShieldCheck, Tag, Info, PhoneCall, Cpu, Layers, Calendar, UserCheck } from "lucide-react";
+import { headers } from "next/headers";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportIssueDialog } from "@/components/public/report-issue-dialog";
@@ -28,6 +29,9 @@ export default async function PublicScanPage({ params }: PageProps) {
   );
 
   if (!result) {
+    const host = headers().get("host") ?? "unknown";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "unset";
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 md:p-10 flex flex-col items-center justify-center">
         <div className="w-full max-w-md space-y-6">
@@ -42,6 +46,11 @@ export default async function PublicScanPage({ params }: PageProps) {
                 The scanned identifier{" "}
                 <span className="font-mono font-semibold text-foreground">{decodedId}</span>{" "}
                 does not match an active record in the system.
+              </p>
+              <p className="text-[10px] text-muted-foreground/80">
+                Host: <span className="font-mono">{host}</span>
+                <br />
+                Configured app URL: <span className="font-mono">{appUrl}</span>
               </p>
             </div>
             <div className="pt-2 text-xs text-muted-foreground border-t">
