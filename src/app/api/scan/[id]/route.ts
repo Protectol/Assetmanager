@@ -50,7 +50,7 @@ export async function GET(
       asset = await fetchAsset(selectFields);
     } catch (err: unknown) {
       // Fallback if has_sim or sim_number columns do not exist yet (PGRST205)
-      const errorObj = err as any;
+      const errorObj = err as { code?: string; message?: string };
       if (errorObj?.code === 'PGRST205' || (errorObj?.message && errorObj.message.includes('has_sim'))) {
         const fallbackFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
         try {
