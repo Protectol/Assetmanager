@@ -37,7 +37,7 @@ export function BulkPrintDialog({ selectedAssets, disabled, companyName = "Prote
       await Promise.all(
         selectedAssets.map(async (asset) => {
           try {
-            const qrText = `${appUrl}/assets/${asset.id}`;
+            const qrText = `${appUrl}/scan/${asset.id}`;
             qrMap[asset.id] = await QRCode.default.toDataURL(qrText, {
               width: 200,
               margin: 1,

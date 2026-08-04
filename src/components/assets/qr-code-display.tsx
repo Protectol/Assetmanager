@@ -30,7 +30,7 @@ export function QRCodeDisplay({ assetId, assetTag, assetName }: QRCodeDisplayPro
     typeof window !== "undefined"
       ? window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const qrText = `${appUrl}/assets/${assetId}`;
+  const qrText = `${appUrl}/scan/${assetId}`;
 
   useEffect(() => {
     if (!open) return;

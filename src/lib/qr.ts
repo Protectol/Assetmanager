@@ -20,7 +20,7 @@ export async function generateQRDataURL(text: string, options?: QRCode.QRCodeToD
 export function getAssetQRContent(assetTag: string, assetId?: string, appUrl?: string): string {
   const baseUrl = appUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   if (assetId) {
-    return `${baseUrl}/assets/${assetId}`;
+    return `${baseUrl}/scan/${assetId}`;
   }
   return assetTag;
 }
