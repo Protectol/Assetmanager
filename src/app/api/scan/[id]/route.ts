@@ -27,7 +27,7 @@ export async function GET(
 
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedId);
 
-    let selectFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
+    const selectFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, has_sim, sim_number";
     let asset = null;
 
     async function fetchAsset(fields: string) {
@@ -48,9 +48,10 @@ export async function GET(
 
     try {
       asset = await fetchAsset(selectFields);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Fallback if has_sim or sim_number columns do not exist yet (PGRST205)
-      if (err?.code === 'PGRST205' || (err?.message && err.message.includes('has_sim'))) {
+      const errorObj = err as any;
+      if (errorObj?.code === 'PGRST205' || (errorObj?.message && errorObj.message.includes('has_sim'))) {
         const fallbackFields = "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
         try {
           asset = await fetchAsset(fallbackFields);
