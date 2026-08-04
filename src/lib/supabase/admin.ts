@@ -16,5 +16,8 @@ export function createServiceClient() {
       autoRefreshToken: false,
       persistSession: false,
     },
+    global: {
+      fetch: (reqUrl, init) => fetch(reqUrl, { ...init, cache: "no-store" }),
+    },
   });
 }
