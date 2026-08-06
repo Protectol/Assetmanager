@@ -127,28 +127,12 @@ export async function sendFormOutcomeEmail({
   const { data: settingsRows } = await supabase
     .from("app_settings")
     .select("key, value")
-    .in("key", [
-      "company_name",
-      "email_default_to",
-      "email_default_cc",
-      "email_subject_template",
-      "email_body_template",
-    ]);
+    .eq("key", "company_name");
 
   const settings = Object.fromEntries((settingsRows || []).map((row) => [row.key, row.value]));
   const employeeEmail = form.employee.email?.trim();
-  const operationalTo = parseAddresses(settings.email_default_to);
-  const operationalCc = parseAddresses(settings.email_default_cc);
-  const to = outcome === "rejected"
-    ? uniqueAddresses(employeeEmail ? [employeeEmail] : operationalTo)
-    : uniqueAddresses(operationalTo.length ? operationalTo : employeeEmail ? [employeeEmail] : []);
-  const cc = outcome === "rejected"
-    ? uniqueAddresses([...operationalTo, ...operationalCc]).filter((address) => !to.includes(address))
-    : uniqueAddresses([...operationalCc, ...(employeeEmail ? [employeeEmail] : [])]).filter(
-        (address) => !to.includes(address)
-      );
-
-  if (!to.length) return { sent: false, reason: "no_recipients" };
+  if (!employeeEmail) return { sent: false, reason: "no_recipients" };
+  const to = [employeeEmail];
 
   const companyName = settings.company_name || process.env.NEXT_PUBLIC_COMPANY_NAME || "Asset Management";
   const actionLabel = ACTION_LABELS[form.action_type] || titleCase(form.action_type);
@@ -172,15 +156,8 @@ export async function sendFormOutcomeEmail({
     }
   }
   const completedAt = form.submission?.submitted_at || new Date().toISOString();
-  const replacements = buildReplacements({ form, rows, actionLabel, outcomeLabel, completedAt, reviewedBy, reason });
-  const subject = replaceTokens(
-    settings.email_subject_template?.trim() || `[Verification Type] - [Outcome] - [Team Member Name] ([Team Member ID])`,
-    replacements
-  );
-  const message = replaceTokens(
-    settings.email_body_template?.trim() || defaultMessage(outcome, actionLabel, form.employee.employee_name),
-    replacements
-  );
+  const subject = employeeAcknowledgementSubject(form, actionLabel, outcome);
+  const message = employeeAcknowledgementMessage(form, actionLabel, outcome);
   const resend = new Resend(apiKey);
   const fromEmail = process.env.RESEND_FROM_EMAIL?.trim() || "onboarding@resend.dev";
   const fromName = process.env.RESEND_FROM_NAME?.trim() || `${companyName} Asset Manager`;
@@ -204,7 +181,6 @@ export async function sendFormOutcomeEmail({
       {
         from: `${fromName} <${fromEmail}>`,
         to,
-        cc: cc.length ? cc : undefined,
         replyTo: process.env.RESEND_REPLY_TO?.trim() || employeeEmail || undefined,
         subject,
         html,
@@ -259,38 +235,6 @@ function getAssetRows(form: FormEmailRecord): EmailAssetRow[] {
   });
 }
 
-function buildReplacements({ form, rows, actionLabel, outcomeLabel, completedAt, reviewedBy, reason }: {
-  form: FormEmailRecord;
-  rows: EmailAssetRow[];
-  actionLabel: string;
-  outcomeLabel: string;
-  completedAt: string;
-  reviewedBy?: string;
-  reason?: string;
-}) {
-  const employee = form.employee!;
-  const assetList = rows.length
-    ? rows.map((row, index) => `${index + 1}. ${row.name} | ${row.tag} | ${row.serial} | ${row.condition} | ${row.remarks}`).join("\n")
-    : "No assets were declared or included.";
-  return {
-    "[Team Member Name]": employee.employee_name,
-    "[Employee Name]": employee.employee_name,
-    "[Team Member ID]": employee.employee_id,
-    "[Employee ID]": employee.employee_id,
-    "[Department]": employee.department,
-    "[Designation]": employee.designation,
-    "[Location]": employee.location,
-    "[Verification Type]": actionLabel,
-    "[Outcome]": outcomeLabel,
-    "[Status]": outcomeLabel,
-    "[Asset Table]": assetList,
-    "[Admin Name]": reviewedBy || "Asset Management Team",
-    "[Date]": formatDate(completedAt),
-    "[Reason]": reason || "Not applicable",
-    "[Form ID]": form.id,
-  };
-}
-
 function FormOutcomeEmail({ companyName, actionLabel, outcome, outcomeLabel, message, form, rows, completedAt, reviewedBy, reason }: {
   companyName: string;
   actionLabel: string;
@@ -325,9 +269,9 @@ function FormOutcomeEmail({ companyName, actionLabel, outcome, outcomeLabel, mes
             ["Department", employee.department], ["Designation", employee.designation],
             ["Location", employee.location], ["Email", employee.email],
           ]} />
-          <SectionTitle>Verification Details</SectionTitle>
+          <SectionTitle>Confirmation Details</SectionTitle>
           <InfoGrid rows={[
-            ["Verification type", actionLabel], ["Outcome", outcomeLabel],
+            ["Action", actionLabel], ["Status", outcomeLabel],
             ["Submitted / completed", formatDateTime(completedAt)], ["Reviewed by", reviewedBy || "System workflow"],
             ["Form reference", form.id],
             ...(reason ? [["Reason", reason] as [string, string]] : []),
@@ -353,7 +297,7 @@ function FormOutcomeEmail({ companyName, actionLabel, outcome, outcomeLabel, mes
             </div>
           ) : <p style={{ fontSize: "14px", color: "#64748b" }}>No assets were declared or included in this form.</p>}
           <div style={{ marginTop: "28px", paddingTop: "18px", borderTop: "1px solid #e5e7eb", fontSize: "12px", lineHeight: "18px", color: "#64748b" }}>
-            This is an automated record from the {companyName} Asset Manager. Please retain it for operational and audit purposes.
+            This acknowledgment was sent automatically by the {companyName} Asset Manager. No action is required unless any information above is incorrect.
           </div>
         </div>
       </div>
@@ -382,29 +326,35 @@ function buildPlainText({ companyName, actionLabel, outcomeLabel, message, form,
   const assets = rows.length
     ? rows.map((row, index) => `${index + 1}. ${row.name}\n   Type: ${row.type}\n   Tag: ${row.tag}\n   Serial/ID: ${row.serial}\n   Condition: ${row.condition}\n   Verification: ${row.verification}\n   Remarks: ${row.remarks}`).join("\n\n")
     : "No assets were declared or included.";
-  return `${companyName} Asset Manager\n${actionLabel}: ${outcomeLabel}\n\n${message}\n\nTEAM MEMBER\nName: ${employee.employee_name}\nID: ${employee.employee_id}\nDepartment: ${employee.department}\nDesignation: ${employee.designation}\nLocation: ${employee.location}\nEmail: ${employee.email}\n\nVERIFICATION\nCompleted: ${formatDateTime(completedAt)}\nReviewed by: ${reviewedBy || "System workflow"}\nForm reference: ${form.id}${reason ? `\nReason: ${reason}` : ""}\n\nASSETS\n${assets}`;
+  return `${companyName} Asset Manager\n${actionLabel}: ${outcomeLabel}\n\n${message}\n\nTEAM MEMBER\nName: ${employee.employee_name}\nID: ${employee.employee_id}\nDepartment: ${employee.department}\nDesignation: ${employee.designation}\nLocation: ${employee.location}\nEmail: ${employee.email}\n\nCONFIRMATION\nCompleted: ${formatDateTime(completedAt)}\nReviewed by: ${reviewedBy || "System workflow"}\nForm reference: ${form.id}${reason ? `\nReason: ${reason}` : ""}\n\nASSETS\n${assets}\n\nThis is an automated acknowledgment. No action is required unless any information is incorrect.`;
 }
 
-function parseAddresses(value?: string) {
-  return uniqueAddresses((value || "").split(/[;,]/).map((address) => address.trim()).filter(Boolean));
+function employeeAcknowledgementSubject(form: FormEmailRecord, actionLabel: string, outcome: FormOutcome) {
+  const employee = form.employee!;
+  const status = outcome === "rejected" ? "Action Required" : "Confirmation";
+  return `${actionLabel} ${status} - ${employee.employee_name} (${employee.employee_id})`;
 }
-function uniqueAddresses(addresses: string[]) {
-  return [...new Set(addresses.map((address) => address.toLowerCase()))];
-}
-function replaceTokens(template: string, replacements: Record<string, string>) {
-  return Object.entries(replacements).reduce((result, [token, value]) => result.replaceAll(token, value), template);
-}
-function defaultMessage(outcome: FormOutcome, action: string, employeeName: string) {
-  return outcome === "rejected"
-    ? `Dear ${employeeName},\n\nYour ${action.toLowerCase()} submission has been reviewed and could not be approved. Please review the reason below and contact the IT or HR team if you need assistance.`
-    : `Dear Team,\n\nThe ${action.toLowerCase()} for ${employeeName} has been successfully ${outcome === "approved" ? "approved and recorded in the asset portal" : "completed"}. The full team member and asset details are provided below.`;
+
+function employeeAcknowledgementMessage(form: FormEmailRecord, actionLabel: string, outcome: FormOutcome) {
+  const employeeName = form.employee!.employee_name;
+  if (outcome === "rejected") {
+    return `Dear ${employeeName},\n\nYour ${actionLabel.toLowerCase()} submission has been reviewed but could not be approved. No asset changes were applied to your profile in the Protectol Asset Portal. Please review the reason below and contact the Asset Management Team if you need assistance.`;
+  }
+
+  const confirmationByAction: Record<string, string> = {
+    onboarding: "Your company asset assignment has been completed successfully and recorded against your employee profile in the Protectol Asset Portal.",
+    exchange: "Your asset exchange has been completed successfully. The returned and replacement asset details have been updated against your employee profile in the Protectol Asset Portal.",
+    return: "Your asset return and unassignment have been completed successfully. The listed assets have been removed from your active assignment in the Protectol Asset Portal.",
+    verification: "Your assigned assets have been verified successfully, and the latest asset details and conditions have been recorded in the Protectol Asset Portal.",
+    current_verification: "Your current asset declaration has been approved successfully. The confirmed assets have been added to the Protectol Asset Portal and linked to your employee profile.",
+  };
+  const confirmation = confirmationByAction[form.action_type]
+    || `Your ${actionLabel.toLowerCase()} has been completed successfully and recorded in the Protectol Asset Portal.`;
+  return `Dear ${employeeName},\n\n${confirmation}\n\nPlease review the confirmation and asset details below. No further action is required unless any information is incorrect. If you notice a discrepancy, please contact the Asset Management Team.`;
 }
 function titleCase(value: string) {
   if (!value || value === "—") return value;
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(value));
 }
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
