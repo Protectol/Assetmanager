@@ -8,6 +8,7 @@ import {
   processVerificationSubmission,
 } from "@/lib/actions/forms";
 import type { AssetCondition, Form, FormAsset, Employee, Asset } from "@/types";
+import { sendFormOutcomeEmail } from "@/lib/email/form-outcome";
 
 interface AssetSubmission {
   id: string;
@@ -202,7 +203,18 @@ export async function POST(
   }
 
   // current_verification goes to 'completed', awaiting admin approval
-  await supabase.from("forms").update({ status: "completed" }).eq("id", form.id);
+  const { error: statusError } = await supabase
+    .from("forms")
+    .update({ status: "completed" })
+    .eq("id", form.id);
 
-  return NextResponse.json({ success: true, pdfUrl });
+  if (statusError) {
+    return NextResponse.json({ error: statusError.message }, { status: 500 });
+  }
+
+  const email = form.action_type === "current_verification"
+    ? { sent: false, reason: "awaiting_approval" }
+    : await sendFormOutcomeEmail({ supabase, formId: form.id, outcome: "completed" });
+
+  return NextResponse.json({ success: true, pdfUrl, email });
 }

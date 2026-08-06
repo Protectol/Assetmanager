@@ -85,7 +85,7 @@ export function EmailSettingsForm({ initial, isAdmin }: EmailSettingsProps) {
           className="mt-1"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Use: [Team Member Name], [Team Member ID], [Department]
+          Use: [Team Member Name], [Team Member ID], [Department], [Verification Type], [Outcome]
         </p>
       </div>
       <div>
@@ -99,7 +99,7 @@ export function EmailSettingsForm({ initial, isAdmin }: EmailSettingsProps) {
           className="mt-1 font-mono text-xs"
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Use: [Team Member Name], [Team Member ID], [Department], [Designation], [Location], [Asset Table], [Admin Name], [Date]
+          Use: [Team Member Name], [Team Member ID], [Department], [Designation], [Location], [Verification Type], [Outcome], [Asset Table], [Admin Name], [Date], [Reason], [Form ID]
         </p>
       </div>
       {isAdmin && (

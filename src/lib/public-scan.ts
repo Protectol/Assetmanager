@@ -14,6 +14,7 @@ export interface PublicScanAsset {
   current_holder_id: string | null;
   has_sim?: boolean | null;
   sim_number?: string | null;
+  updated_at?: string | null;
 }
 
 export interface PublicScanHolder {
@@ -25,13 +26,14 @@ export interface PublicScanHolder {
 export interface PublicScanResult {
   asset: PublicScanAsset;
   holder: PublicScanHolder | null;
+  assigned_since: string | null;
 }
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const BASE_FIELDS =
-  "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id";
+  "id, asset_name, asset_tag, asset_type, serial_number, brand, model, condition, status, current_holder_id, updated_at";
 const SIM_FIELDS = `${BASE_FIELDS}, has_sim, sim_number`;
 
 function createScanClient(): SupabaseClient | null {
@@ -147,5 +149,8 @@ export async function fetchPublicAssetScan(
     holder = await fetchHolder(supabase, asset.current_holder_id);
   }
 
-  return { asset, holder };
+  // Use asset.updated_at as the assignment date proxy (updated on every status/holder change)
+  const assigned_since = asset.status === "assigned" && asset.updated_at ? asset.updated_at : null;
+
+  return { asset, holder, assigned_since };
 }

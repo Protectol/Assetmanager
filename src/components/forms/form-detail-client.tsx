@@ -68,7 +68,11 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to approve");
       setFormStatus("approved");
-      toast.success(`Approved! ${data.assets_created} asset(s) added to the register.`);
+      if (data.email?.sent) {
+        toast.success(`Approved! ${data.assets_created} asset(s) added and the confirmation email was sent.`);
+      } else {
+        toast.warning(`Approved and ${data.assets_created} asset(s) added, but the email was not sent. Check Resend configuration.`);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Approval failed");
     } finally {
@@ -92,7 +96,11 @@ export function FormDetailClient({ form, emailSettings, adminName }: FormDetailC
       if (!res.ok) throw new Error(data.error || "Failed to reject");
       setFormStatus("rejected");
       setShowRejectBox(false);
-      toast.success("Form rejected and employee notified.");
+      if (data.email?.sent) {
+        toast.success("Form rejected and the team member was notified by email.");
+      } else {
+        toast.warning("Form rejected, but the email was not sent. Check Resend configuration.");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Rejection failed");
     } finally {

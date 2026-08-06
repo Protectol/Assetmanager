@@ -59,7 +59,11 @@ export default async function PublicScanPage({ params }: PageProps) {
     );
   }
 
-  const { asset, holder } = result;
+  const { asset, holder, assigned_since } = result;
+
+  const formattedDate = assigned_since
+    ? new Date(assigned_since).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 md:p-10 flex flex-col items-center">

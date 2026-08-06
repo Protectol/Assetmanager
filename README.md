@@ -22,6 +22,7 @@ A modern, professional internal web application for managing employee assets. Bu
 - **Reports** — Employee assets, history, verification, pending forms, returns
 - **Search & Filters** — Across employees, assets, and forms
 - **Dark Mode** — Light/dark theme support
+- **Automatic Email Notifications** — Professional Resend emails after form completion, approval, or rejection
 
 ## Getting Started
 
@@ -55,7 +56,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_COMPANY_NAME=Your Company Name
 NEXT_PUBLIC_FORM_LINK_EXPIRY_DAYS=7
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM_EMAIL=assets@updates.yourdomain.com
+RESEND_FROM_NAME=Your Company Asset Manager
+RESEND_REPLY_TO=it@yourdomain.com
 ```
+
+For production email delivery, verify a sending domain in Resend and configure notification recipients under Settings → Automatic Email Notifications. Resend's free plan can be used for this transactional workflow.
 
 ### 4. Create Internal Users
 

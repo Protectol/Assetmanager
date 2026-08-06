@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
-    const { asset, holder } = result;
+    const { asset, holder, assigned_since } = result;
 
     return NextResponse.json({
       asset: {
@@ -39,6 +39,7 @@ export async function GET(
             location: holder.location,
           }
         : null,
+      assigned_since: assigned_since ?? null,
     });
   } catch (err) {
     console.error("Public asset scan API error:", err);

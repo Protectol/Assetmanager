@@ -64,9 +64,9 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Outlook Email Template</CardTitle>
+          <CardTitle>Automatic Email Notifications</CardTitle>
           <CardDescription>
-            Pre-filled email template used when sending Asset Assignment emails after approval.
+            Recipients and message content used for automatic Resend emails after a form is completed, approved, or rejected.
           </CardDescription>
         </CardHeader>
         <CardContent>

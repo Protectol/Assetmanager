@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { sendFormOutcomeEmail } from "@/lib/email/form-outcome";
 
 export async function POST(
   _request: Request,
@@ -118,9 +119,18 @@ export async function POST(
   }
 
   // Mark form as approved
-  await supabase.from("forms").update({ status: "approved" }).eq("id", id);
+  const { error: statusError } = await supabase.from("forms").update({ status: "approved" }).eq("id", id);
+  if (statusError) return NextResponse.json({ error: statusError.message }, { status: 500 });
 
-  return NextResponse.json({ success: true, assets_created: createdAssets.length });
+  const email = await sendFormOutcomeEmail({
+    supabase,
+    formId: id,
+    outcome: "approved",
+    reviewedBy: user.full_name,
+    assetIds: createdAssets,
+  });
+
+  return NextResponse.json({ success: true, assets_created: createdAssets.length, email });
 }
 
 export async function DELETE(
@@ -140,7 +150,8 @@ export async function DELETE(
   if (form.status !== "completed")
     return NextResponse.json({ error: "Form must be submitted first" }, { status: 400 });
 
-  await supabase.from("forms").update({ status: "rejected" }).eq("id", id);
+  const { error: statusError } = await supabase.from("forms").update({ status: "rejected" }).eq("id", id);
+  if (statusError) return NextResponse.json({ error: statusError.message }, { status: 500 });
   await supabase.from("asset_history").insert({
     action: "correction",
     performed_by: user.id,
@@ -148,7 +159,11 @@ export async function DELETE(
     metadata: { form_id: id, rejection_reason: reason },
   });
 
-  return NextResponse.json({ success: true });
+  const email = await sendFormOutcomeEmail({
+    supabase, formId: id, outcome: "rejected", reviewedBy: user.full_name, reason,
+  });
+
+  return NextResponse.json({ success: true, email });
 }
 
 interface DeclaredAsset {
