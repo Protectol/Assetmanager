@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { CSSProperties, ReactNode } from "react";
+import { render } from "@react-email/render";
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -185,6 +186,20 @@ export async function sendFormOutcomeEmail({
   const fromName = process.env.RESEND_FROM_NAME?.trim() || `${companyName} Asset Manager`;
 
   try {
+    const html = await render(
+      FormOutcomeEmail({
+        companyName,
+        actionLabel,
+        outcome,
+        outcomeLabel,
+        message,
+        form,
+        rows,
+        completedAt,
+        reviewedBy,
+        reason,
+      })
+    );
     const { data: sendData, error: sendError } = await resend.emails.send(
       {
         from: `${fromName} <${fromEmail}>`,
@@ -192,18 +207,7 @@ export async function sendFormOutcomeEmail({
         cc: cc.length ? cc : undefined,
         replyTo: process.env.RESEND_REPLY_TO?.trim() || employeeEmail || undefined,
         subject,
-        react: FormOutcomeEmail({
-          companyName,
-          actionLabel,
-          outcome,
-          outcomeLabel,
-          message,
-          form,
-          rows,
-          completedAt,
-          reviewedBy,
-          reason,
-        }),
+        html,
         text: buildPlainText({ companyName, actionLabel, outcomeLabel, message, form, rows, completedAt, reviewedBy, reason }),
       },
       { headers: { "Idempotency-Key": `form-outcome-${formId}-${outcome}` } }
